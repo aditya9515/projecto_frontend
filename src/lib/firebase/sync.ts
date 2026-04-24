@@ -27,7 +27,18 @@ export async function syncFirebaseUser(user: User) {
   });
 
   if (!response.ok) {
-    throw new Error("Unable to sync your account right now.");
+    let errorMessage = "Unable to sync your account right now.";
+
+    try {
+      const data = (await response.json()) as { error?: string };
+      if (data.error) {
+        errorMessage = data.error;
+      }
+    } catch {
+      // Fall back to the generic message if the response body is empty or invalid.
+    }
+
+    throw new Error(errorMessage);
   }
 
   return response.json();
