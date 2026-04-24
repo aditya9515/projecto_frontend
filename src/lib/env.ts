@@ -1,17 +1,23 @@
 import { z } from "zod";
 
-const runtimeEnvSchema = z.object({
+const firebaseAdminEnvSchema = z.object({
   FIREBASE_ADMIN_PROJECT_ID: z.string().min(1),
   FIREBASE_ADMIN_CLIENT_EMAIL: z.string().email(),
   FIREBASE_ADMIN_PRIVATE_KEY: z.string().min(1),
+});
+
+const dodoEnvSchema = z.object({
   DODO_API_KEY: z.string().min(1),
   DODO_WEBHOOK_SECRET: z.string().min(1),
   DODO_PRO_MONTHLY_PRODUCT_ID: z.string().min(1),
   DODO_PRO_YEARLY_PRODUCT_ID: z.string().min(1),
+  DODO_ENVIRONMENT: z.enum(["live_mode", "test_mode"]).optional(),
+});
+
+const appRuntimeEnvSchema = z.object({
   APP_BASE_URL: z.string().url(),
   DESKTOP_PROTOCOL: z.string().min(1).default("launchstack://"),
   DESKTOP_ALLOWED_ORIGINS: z.string().optional(),
-  DODO_ENVIRONMENT: z.enum(["live_mode", "test_mode"]).optional(),
 });
 
 function formatValidationError(error: z.ZodError) {
@@ -20,7 +26,12 @@ function formatValidationError(error: z.ZodError) {
     .join("; ");
 }
 
-let cachedEnv: z.infer<typeof runtimeEnvSchema> | null = null;
+let cachedDodoEnv: z.infer<typeof dodoEnvSchema> | null = null;
+let cachedAppRuntimeEnv: z.infer<typeof appRuntimeEnvSchema> | null = null;
+let cachedFirebaseAdminEnv:
+  | z.infer<typeof firebaseAdminEnvSchema>
+  | null
+  | undefined = undefined;
 
 export const publicEnv = {
   firebaseApiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
@@ -39,22 +50,37 @@ export function isFirebaseClientConfigured() {
   ].every(Boolean);
 }
 
-export function getServerEnv() {
-  if (cachedEnv) {
-    return cachedEnv;
+export function getAppRuntimeEnv() {
+  if (cachedAppRuntimeEnv) {
+    return cachedAppRuntimeEnv;
   }
 
-  const parsed = runtimeEnvSchema.safeParse({
-    FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
-    FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-    FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+  const parsed = appRuntimeEnvSchema.safeParse({
+    APP_BASE_URL: process.env.APP_BASE_URL,
+    DESKTOP_PROTOCOL: process.env.DESKTOP_PROTOCOL,
+    DESKTOP_ALLOWED_ORIGINS: process.env.DESKTOP_ALLOWED_ORIGINS,
+  });
+
+  if (!parsed.success) {
+    throw new Error(
+      `Server environment is not configured correctly: ${formatValidationError(parsed.error)}`,
+    );
+  }
+
+  cachedAppRuntimeEnv = parsed.data;
+  return cachedAppRuntimeEnv;
+}
+
+export function getDodoEnv() {
+  if (cachedDodoEnv) {
+    return cachedDodoEnv;
+  }
+
+  const parsed = dodoEnvSchema.safeParse({
     DODO_API_KEY: process.env.DODO_API_KEY,
     DODO_WEBHOOK_SECRET: process.env.DODO_WEBHOOK_SECRET,
     DODO_PRO_MONTHLY_PRODUCT_ID: process.env.DODO_PRO_MONTHLY_PRODUCT_ID,
     DODO_PRO_YEARLY_PRODUCT_ID: process.env.DODO_PRO_YEARLY_PRODUCT_ID,
-    APP_BASE_URL: process.env.APP_BASE_URL,
-    DESKTOP_PROTOCOL: process.env.DESKTOP_PROTOCOL,
-    DESKTOP_ALLOWED_ORIGINS: process.env.DESKTOP_ALLOWED_ORIGINS,
     DODO_ENVIRONMENT: process.env.DODO_ENVIRONMENT,
   });
 
@@ -64,8 +90,63 @@ export function getServerEnv() {
     );
   }
 
-  cachedEnv = parsed.data;
-  return cachedEnv;
+  cachedDodoEnv = parsed.data;
+  return cachedDodoEnv;
+}
+
+export function getFirebaseAdminEnv() {
+  if (cachedFirebaseAdminEnv !== undefined) {
+    return cachedFirebaseAdminEnv;
+  }
+
+  const raw = {
+    FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
+    FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+    FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+  };
+
+  const providedKeys = Object.values(raw).filter(
+    (value) => typeof value === "string" && value.trim().length > 0,
+  );
+
+  if (providedKeys.length === 0) {
+    cachedFirebaseAdminEnv = null;
+    return cachedFirebaseAdminEnv;
+  }
+
+  const parsed = firebaseAdminEnvSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `Firebase Admin environment is not configured correctly: ${formatValidationError(parsed.error)}`,
+    );
+  }
+
+  cachedFirebaseAdminEnv = parsed.data;
+  return cachedFirebaseAdminEnv;
+}
+
+export function getFirebaseProjectId() {
+  const directProjectId =
+    process.env.GOOGLE_CLOUD_PROJECT ??
+    process.env.GCLOUD_PROJECT ??
+    process.env.FIREBASE_PROJECT_ID ??
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+  if (directProjectId) {
+    return directProjectId;
+  }
+
+  const firebaseConfig = process.env.FIREBASE_CONFIG;
+  if (!firebaseConfig) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(firebaseConfig) as { projectId?: string };
+    return parsed.projectId;
+  } catch {
+    return undefined;
+  }
 }
 
 export function getOptionalAppConfig() {

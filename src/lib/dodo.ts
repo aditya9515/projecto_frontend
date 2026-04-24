@@ -2,7 +2,7 @@ import DodoPayments from "dodopayments";
 import type { UnwrapWebhookEvent } from "dodopayments/resources/webhooks";
 import type { CheckoutSessionResponse } from "dodopayments/resources/checkout-sessions";
 
-import { getServerEnv } from "@/lib/env";
+import { getDodoEnv } from "@/lib/env";
 import type { BillingCycle } from "@/lib/types";
 
 let cachedClient: DodoPayments | null = null;
@@ -12,7 +12,7 @@ function getDodoClient() {
     return cachedClient;
   }
 
-  const env = getServerEnv();
+  const env = getDodoEnv();
   cachedClient = new DodoPayments({
     bearerToken: env.DODO_API_KEY,
     webhookKey: env.DODO_WEBHOOK_SECRET,
@@ -23,7 +23,7 @@ function getDodoClient() {
 }
 
 export function getProductIdForBillingCycle(billingCycle: BillingCycle) {
-  const env = getServerEnv();
+  const env = getDodoEnv();
   return billingCycle === "yearly"
     ? env.DODO_PRO_YEARLY_PRODUCT_ID
     : env.DODO_PRO_MONTHLY_PRODUCT_ID;

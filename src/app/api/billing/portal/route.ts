@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
 import { createDodoCustomerPortal } from "@/lib/dodo";
-import { getServerEnv } from "@/lib/env";
+import { getAppRuntimeEnv } from "@/lib/env";
 import { listSubscriptionsForUser } from "@/lib/firestore";
 import { selectPrimarySubscription } from "@/lib/subscriptions";
 import { absoluteUrl } from "@/lib/utils";
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const env = getServerEnv();
+    const env = getAppRuntimeEnv();
     const session = await createDodoCustomerPortal({
       customerId: primarySubscription.dodoCustomerId,
       returnUrl: absoluteUrl("/account", env.APP_BASE_URL),

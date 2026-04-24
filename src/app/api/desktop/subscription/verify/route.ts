@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } from "@/lib/cors";
-import { getServerEnv } from "@/lib/env";
+import { getAppRuntimeEnv } from "@/lib/env";
 import { getDesktopSession, listSubscriptionsForUser, touchDesktopSession } from "@/lib/firestore";
 import { isExpired, nowIso, sha256 } from "@/lib/security";
 import { normalizeSubscription, selectPrimarySubscription } from "@/lib/subscriptions";
@@ -15,7 +15,7 @@ const bodySchema = z.object({
 });
 
 export function OPTIONS(request: NextRequest) {
-  const env = getServerEnv();
+  const env = getAppRuntimeEnv();
   return desktopOptionsResponse(
     request,
     env.APP_BASE_URL,
@@ -24,7 +24,7 @@ export function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const env = getServerEnv();
+  const env = getAppRuntimeEnv();
 
   try {
     const allowedOrigin = ensureDesktopOrigin(

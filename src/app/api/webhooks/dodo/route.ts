@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { applyPaymentEventToSubscription, buildSubscriptionRecord } from "@/lib/dodo-subscription";
-import { getServerEnv } from "@/lib/env";
+import { getDodoEnv } from "@/lib/env";
 import { getSubscriptionById, markWebhookProcessed, upsertSubscription } from "@/lib/firestore";
 import { unwrapDodoWebhook } from "@/lib/dodo";
 
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const headers = Object.fromEntries(request.headers.entries());
     const event = unwrapDodoWebhook(rawBody, headers);
-    const env = getServerEnv();
+    const env = getDodoEnv();
     const webhookId =
       request.headers.get("webhook-id") ??
       `${event.type}:${event.timestamp}`;

@@ -1,0 +1,76 @@
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBJ2dW9l63VbBIfgqYEoTSYsBbJDNaPwtI
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: projecto-ec64b.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: projecto-ec64b
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:951745360354:web:2357bb24a237f2f8e389bb
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_APP_DOWNLOAD_URL
+    value: https://downloads.launchstack.app
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: DODO_PRO_MONTHLY_PRODUCT_ID
+    value: pdt_0NdPj8BR3BmNepuOpClPN
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: DODO_PRO_YEARLY_PRODUCT_ID
+    value: pdt_0NdPjxS8kYJdhqKHOuz9k
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: DODO_ENVIRONMENT
+    value: test_mode
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: APP_BASE_URL
+    value: https://projecto.adityakosuru.online
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: DESKTOP_PROTOCOL
+    value: launchstack://
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: DESKTOP_ALLOWED_ORIGINS
+    value: https://projecto.adityakosuru.online
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: DODO_API_KEY
+    secret: DODO_API_KEY
+    availability:
+      - RUNTIME
+
+  - variable: DODO_WEBHOOK_SECRET
+    secret: DODO_WEBHOOK_SECRET
+    availability:
+      - RUNTIME

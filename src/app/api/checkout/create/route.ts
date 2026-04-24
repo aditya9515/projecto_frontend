@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
 import { createDodoCheckoutSession } from "@/lib/dodo";
-import { getServerEnv } from "@/lib/env";
+import { getAppRuntimeEnv } from "@/lib/env";
 import { getUserProfile } from "@/lib/firestore";
 import { absoluteUrl } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     const decoded = await requireVerifiedUser(request);
     const { billingCycle } = bodySchema.parse(await request.json());
-    const env = getServerEnv();
+    const env = getAppRuntimeEnv();
     const profile = await getUserProfile(decoded.uid);
     const email = profile?.email ?? decoded.email;
 
