@@ -12,7 +12,7 @@ export async function syncFirebaseUser(user: User) {
   const idToken = await user.getIdToken();
   const payload: AuthSyncPayload = {
     email: user.email ?? "",
-    displayName: user.displayName ?? user.email ?? "LaunchStack User",
+    displayName: user.displayName ?? user.email ?? "projecto user",
     photoURL: user.photoURL ?? null,
     providers: uniqueProviders(user),
   };

@@ -6,7 +6,7 @@ import { getOptionalAppConfig } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Desktop Login",
-  description: "Sign in to LaunchStack and return to the desktop app.",
+  description: "Sign in to projecto and return to the desktop app.",
 };
 
 export default function DesktopLoginPage() {

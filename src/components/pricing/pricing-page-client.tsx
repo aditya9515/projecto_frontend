@@ -129,25 +129,25 @@ export function PricingPageClient() {
   return (
     <div className="section-shell py-16 sm:py-20">
       <div className="mx-auto max-w-3xl text-center">
-        <div className="eyebrow justify-center">Pricing</div>
-        <h1 className="mt-6 text-4xl font-semibold text-white sm:text-5xl">
-          Billing-backed Pro access for the desktop app.
+        <div className="eyebrow reveal-1 justify-center">Pricing</div>
+        <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+          Billing-backed Pro access for projecto desktop.
         </h1>
-        <p className="mt-5 text-lg leading-8 text-muted-strong">
-          LaunchStack uses this web app as the source of truth for users,
+        <p className="reveal-3 mt-5 text-lg leading-8 text-muted-strong">
+          projecto uses this web app as the source of truth for users,
           subscriptions, and secure Pro verification.
         </p>
       </div>
 
       <div className="mt-10 flex justify-center">
-        <div className="inline-flex rounded-full border border-white/10 bg-white/6 p-1">
+        <div className="inline-flex rounded-full border border-white/12 bg-white/4 p-1">
           {(["monthly", "yearly"] as BillingCycle[]).map((cycle) => (
             <button
               key={cycle}
               className={cn(
                 "rounded-full px-5 py-2 text-sm font-semibold transition",
                 billingCycle === cycle
-                  ? "bg-white text-slate-950"
+                  ? "bg-white text-black"
                   : "text-muted-strong hover:text-white",
               )}
               onClick={() => setBillingCycle(cycle)}
@@ -160,9 +160,11 @@ export function PricingPageClient() {
       </div>
 
       <div className="mt-12 grid gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col">
+        <Card className="reveal-1 flex flex-col">
           <div>
-            <div className="text-sm uppercase tracking-[0.2em] text-muted">Free</div>
+            <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+              Free
+            </div>
             <div className="mt-4 text-4xl font-semibold text-white">
               {plans.free.price}
             </div>
@@ -184,12 +186,12 @@ export function PricingPageClient() {
           </Button>
         </Card>
 
-        <Card className="relative overflow-hidden border-brand/20 bg-[linear-gradient(180deg,rgba(22,43,66,0.96),rgba(10,18,32,0.88))]">
-          <div className="absolute right-6 top-6 rounded-full bg-brand/16 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand">
+        <Card className="reveal-2 scan-line relative overflow-hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03))]">
+          <div className="absolute right-6 top-6 rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white">
             {proPricing.badge}
           </div>
           <div>
-            <div className="text-sm uppercase tracking-[0.2em] text-brand">
+            <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted-strong">
               Pro
             </div>
             <div className="mt-4 flex items-end gap-3">
@@ -203,7 +205,7 @@ export function PricingPageClient() {
           <ul className="mt-8 space-y-3 text-sm text-muted-strong">
             {plans.pro.features.map((feature) => (
               <li key={feature} className="flex gap-3">
-                <Check className="mt-0.5 size-4 shrink-0 text-brand" />
+                <Check className="mt-0.5 size-4 shrink-0 text-white" />
                 <span>{feature}</span>
               </li>
             ))}
@@ -223,12 +225,12 @@ export function PricingPageClient() {
               ) : user ? (
                 "Upgrade to Pro"
               ) : (
-                "Sign in and upgrade"
+                "Sign in before checkout"
               )}
             </Button>
-            <div className="rounded-2xl border border-white/10 bg-white/4 p-4 text-sm text-muted">
+            <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4 text-sm text-muted">
               <div className="flex items-center gap-2 font-semibold text-white">
-                <ShieldCheck className="size-4 text-emerald" />
+                <ShieldCheck className="size-4 text-white" />
                 Secure billing flow
               </div>
               <p className="mt-2 leading-7">

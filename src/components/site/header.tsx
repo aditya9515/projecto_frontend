@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Download, LayoutDashboard, LogOut, Sparkles } from "lucide-react";
+import { Command, Download, LayoutDashboard, LogOut } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -19,16 +19,16 @@ export function SiteHeader() {
   const { downloadUrl } = getOptionalAppConfig();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/6 bg-[rgba(8,16,28,0.75)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/8 bg-black/45 backdrop-blur-2xl">
       <div className="section-shell flex min-h-20 items-center justify-between gap-4">
         <Link className="flex items-center gap-3" href="/">
-          <span className="flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-brand">
-            <Sparkles className="size-5" />
+          <span className="flex size-11 items-center justify-center rounded-2xl border border-white/12 bg-white/5 text-white">
+            <Command className="size-5" />
           </span>
           <div>
-            <div className="text-base font-semibold tracking-tight">LaunchStack</div>
-            <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
-              Local-first launcher
+            <div className="text-base font-semibold tracking-tight">projecto</div>
+            <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+              Local launch control
             </div>
           </div>
         </Link>
@@ -62,10 +62,10 @@ export function SiteHeader() {
           ) : user ? (
             <div className="flex items-center gap-2">
               <Link
-                className="hidden items-center gap-3 rounded-full border border-white/10 bg-white/6 px-3 py-2 text-sm text-muted-strong transition hover:bg-white/10 md:flex"
+                className="hidden items-center gap-3 rounded-full border border-white/12 bg-white/5 px-3 py-2 text-sm text-muted-strong transition hover:bg-white/8 md:flex"
                 href="/account"
               >
-                <span className="flex size-8 items-center justify-center rounded-full bg-brand/18 text-xs font-semibold text-brand">
+                <span className="flex size-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white">
                   {initialsFromName(user.displayName, user.email)}
                 </span>
                 <span className="max-w-44 truncate">
@@ -77,7 +77,7 @@ export function SiteHeader() {
                 <span className="hidden sm:inline">Account</span>
               </Button>
               <button
-                className="inline-flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/6 text-muted-strong transition hover:bg-white/10 hover:text-white"
+                className="inline-flex size-11 items-center justify-center rounded-full border border-white/12 bg-white/5 text-muted-strong transition hover:bg-white/8 hover:text-white"
                 onClick={() => void signOut()}
                 type="button"
               >

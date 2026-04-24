@@ -4,7 +4,7 @@ import { AccountDashboard } from "@/components/account/account-dashboard";
 
 export const metadata: Metadata = {
   title: "Account",
-  description: "Manage your LaunchStack subscription and billing.",
+  description: "Manage your projecto subscription and billing.",
 };
 
 export default function AccountPage() {

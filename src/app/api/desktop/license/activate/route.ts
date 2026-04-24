@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "License key activation is not enabled in LaunchStack v1. Use account-backed subscription sync instead.",
+          "License key activation is not enabled in projecto v1. Use account-backed subscription sync instead.",
       },
       {
         status: 501,

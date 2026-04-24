@@ -115,7 +115,7 @@ export function AccountDashboard() {
         <Card className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 text-muted-strong">
             <LoaderCircle className="size-5 animate-spin" />
-            Loading your LaunchStack account…
+            Loading your projecto account...
           </div>
         </Card>
       </div>
@@ -125,58 +125,58 @@ export function AccountDashboard() {
   return (
     <div className="section-shell py-16 sm:py-20">
       <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(300px,0.7fr)]">
-        <Card>
+        <Card className="reveal-1">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex size-16 items-center justify-center rounded-3xl bg-brand/16 text-lg font-semibold text-brand">
+              <div className="flex size-16 items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/5 text-lg font-semibold text-white">
                 {initialsFromName(user.displayName, user.email)}
               </div>
               <div>
-                <div className="text-sm uppercase tracking-[0.2em] text-muted">
+                <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
                   Account
                 </div>
-                <h1 className="mt-2 text-3xl font-semibold text-white">
-                  {user.displayName ?? "LaunchStack User"}
+                <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-white">
+                  {user.displayName ?? "projecto user"}
                 </h1>
                 <p className="mt-1 text-sm text-muted">{user.email}</p>
               </div>
             </div>
-            <div className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-muted-strong">
+            <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-muted-strong">
               Providers:{" "}
               {user.providerData.map((provider) => provider.providerId).join(", ")}
             </div>
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/4 p-5">
-              <div className="text-sm uppercase tracking-[0.18em] text-muted">
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
+              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
                 Current plan
               </div>
               <div className="mt-3 text-3xl font-semibold text-white">
                 {subscription?.plan === "pro" ? "Pro" : "Free"}
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/4 p-5">
-              <div className="text-sm uppercase tracking-[0.18em] text-muted">
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
+              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
                 Subscription status
               </div>
               <div className="mt-3 text-3xl font-semibold text-white">
                 {statusLabel(subscription?.status ?? "none")}
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/4 p-5">
-              <div className="text-sm uppercase tracking-[0.18em] text-muted">
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
+              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
                 Renewal date
               </div>
               <div className="mt-3 text-lg font-semibold text-white">
                 {formatDateOnly(subscription?.expiresAt)}
               </div>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/4 p-5">
-              <div className="text-sm uppercase tracking-[0.18em] text-muted">
+            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
+              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
                 Access
               </div>
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald/12 px-3 py-2 text-sm font-semibold text-emerald">
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-2 text-sm font-semibold text-white">
                 <ShieldCheck className="size-4" />
                 {subscription?.status === "active" ? "Desktop verified" : "Free access"}
               </div>
@@ -184,8 +184,8 @@ export function AccountDashboard() {
           </div>
         </Card>
 
-        <Card>
-          <div className="text-sm uppercase tracking-[0.2em] text-muted">
+        <Card className="reveal-2">
+          <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
             Billing actions
           </div>
           <div className="mt-6 space-y-4">
@@ -218,7 +218,7 @@ export function AccountDashboard() {
             </Button>
           </div>
           <p className="mt-6 text-sm leading-7 text-muted">
-            The LaunchStack billing backend is the source of truth for your plan,
+            The projecto billing backend is the source of truth for your plan,
             renewal state, and secure desktop subscription checks.
           </p>
           {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}

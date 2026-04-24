@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #08101c;
-  --foreground: #edf4ff;
-  --muted: #9bb2cf;
-  --muted-strong: #bad1ef;
-  --card: rgba(10, 19, 32, 0.78);
-  --card-strong: rgba(13, 24, 40, 0.95);
-  --border: rgba(154, 178, 214, 0.18);
-  --border-strong: rgba(154, 178, 214, 0.28);
-  --brand: #7dd3fc;
-  --brand-strong: #38bdf8;
-  --emerald: #34d399;
-  --amber: #fbbf24;
-  --danger: #fb7185;
-  --shadow: 0 30px 100px rgba(2, 6, 23, 0.45);
+  --background: #050505;
+  --foreground: #f5f5f5;
+  --muted: #9a9a9a;
+  --muted-strong: #c9c9c9;
+  --card: rgba(255, 255, 255, 0.035);
+  --card-strong: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --brand: #f5f5f5;
+  --brand-strong: #ffffff;
+  --emerald: #d4d4d4;
+  --amber: #f0f0f0;
+  --danger: #fca5a5;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
 }
 
 @theme inline {
@@ -31,7 +31,7 @@
   --color-emerald: var(--emerald);
   --color-amber: var(--amber);
   --color-danger: var(--danger);
-  --font-sans: var(--font-sora);
+  --font-sans: var(--font-manrope);
   --font-mono: var(--font-ibm-plex-mono);
 }
 
@@ -46,15 +46,16 @@ body {
 
 body {
   background:
-    radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 30%),
-    linear-gradient(180deg, #0a1321 0%, #08101c 48%, #060d18 100%);
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.04), transparent 26%),
+    linear-gradient(180deg, #090909 0%, #050505 52%, #020202 100%);
   color: var(--foreground);
-  font-family: var(--font-sora), sans-serif;
+  font-family: var(--font-manrope), sans-serif;
 }
 
 ::selection {
-  background: rgba(125, 211, 252, 0.28);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+  color: #050505;
 }
 
 a {
@@ -66,19 +67,27 @@ a {
   @apply mx-auto w-full max-w-7xl px-6 sm:px-8 lg:px-10;
 }
 
+.page-ambient {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.09), transparent 24%),
+    radial-gradient(circle at 85% 0%, rgba(255, 255, 255, 0.05), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 16%, rgba(0, 0, 0, 0.18));
+}
+
 .glass-panel {
   background: linear-gradient(
     180deg,
-    rgba(15, 23, 42, 0.86),
-    rgba(10, 18, 32, 0.76)
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.025)
   );
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(22px);
+  backdrop-filter: blur(18px);
 }
 
 .surface-outline {
   position: relative;
+  isolation: isolate;
 }
 
 .surface-outline::before {
@@ -90,9 +99,9 @@ a {
   background:
     linear-gradient(
       140deg,
-      rgba(125, 211, 252, 0.42),
-      rgba(148, 163, 184, 0.08) 40%,
-      rgba(52, 211, 153, 0.2)
+      rgba(255, 255, 255, 0.26),
+      rgba(255, 255, 255, 0.06) 45%,
+      rgba(255, 255, 255, 0.16)
     );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -102,34 +111,90 @@ a {
   pointer-events: none;
 }
 
-.grid-fade {
+.hairline-grid {
   background-image:
-    linear-gradient(rgba(154, 178, 214, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(154, 178, 214, 0.08) 1px, transparent 1px);
-  background-size: 36px 36px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.86), transparent);
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.86), transparent 82%);
 }
 
 .eyebrow {
-  @apply inline-flex items-center gap-2 rounded-full border border-border-strong bg-white/4 px-3 py-1 text-[0.72rem] font-medium uppercase tracking-[0.24em] text-muted-strong;
+  @apply inline-flex items-center gap-2 rounded-full border border-border-strong bg-white/5 px-3 py-1 text-[0.72rem] font-medium uppercase tracking-[0.28em] text-muted-strong;
 }
 
-.hero-shine {
-  animation: hero-shine 9s ease-in-out infinite;
+.card-hover {
+  transition:
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 240ms ease,
+    background-color 240ms ease;
 }
 
-.fade-up {
-  animation: fade-up 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
-.fade-up-delayed {
-  animation: fade-up 850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.reveal-1 {
+  animation: reveal-up 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes fade-up {
+.reveal-2 {
+  animation: reveal-up 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.reveal-3 {
+  animation: reveal-up 980ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.drift-slow {
+  animation: drift-slow 12s ease-in-out infinite;
+}
+
+.scan-line {
+  overflow: hidden;
+}
+
+.scan-line::after {
+  content: "";
+  position: absolute;
+  inset: -30% auto auto -24%;
+  height: 180%;
+  width: 34%;
+  transform: rotate(12deg);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: scan-line 9s linear infinite;
+  pointer-events: none;
+}
+
+.section-divider {
+  position: relative;
+}
+
+.section-divider::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14),
+    transparent
+  );
+}
+
+@keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(22px);
   }
 
   to {
@@ -138,21 +203,35 @@ a {
   }
 }
 
-@keyframes hero-shine {
+@keyframes drift-slow {
   0%,
   100% {
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translate3d(0, 10px, 0) scale(1.03);
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translate3d(-100%, 0, 0) rotate(12deg);
+  }
+
+  100% {
+    transform: translate3d(420%, 0, 0) rotate(12deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-shine,
-  .fade-up,
-  .fade-up-delayed {
+  .card-hover,
+  .drift-slow,
+  .reveal-1,
+  .reveal-2,
+  .reveal-3,
+  .scan-line::after {
     animation: none;
+    transform: none;
   }
 }

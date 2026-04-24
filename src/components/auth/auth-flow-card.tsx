@@ -1,18 +1,22 @@
 "use client";
 
 import {
-  OAuthProvider,
-  GoogleAuthProvider,
+  Apple,
+  ArrowRight,
+  LoaderCircle,
+} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
   fetchSignInMethodsForEmail,
   getRedirectResult,
+  GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
   signInWithRedirect,
   type AuthError,
   type User,
 } from "firebase/auth";
-import { Apple, ArrowRight, LoaderCircle } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -95,7 +99,7 @@ export function AuthFlowCard({
       await syncFirebaseUser(activeUser);
 
       if (mode === "desktop") {
-        setStatus("Creating a secure desktop sign-in token…");
+        setStatus("Creating a secure desktop sign-in token...");
 
         const response = await authorizedFetch(
           activeUser,
@@ -115,11 +119,11 @@ export function AuthFlowCard({
           );
         }
 
-        window.location.href = `${desktopProtocol ?? "launchstack://"}auth/callback?token=${encodeURIComponent(payload.token)}`;
+        window.location.href = `${desktopProtocol ?? "projecto://"}auth/callback?token=${encodeURIComponent(payload.token)}`;
         return;
       }
 
-      setStatus("Redirecting you back into LaunchStack…");
+      setStatus("Redirecting you back into projecto...");
       router.replace(
         buildPostLoginDestination({
           nextPath,
@@ -134,7 +138,11 @@ export function AuthFlowCard({
   async function startSignIn(kind: "google" | "apple") {
     setBusyProvider(kind);
     setError(null);
-    setStatus(kind === "google" ? "Opening Google sign-in…" : "Opening Apple sign-in…");
+    setStatus(
+      kind === "google"
+        ? "Opening Google sign-in..."
+        : "Opening Apple sign-in...",
+    );
 
     const auth = await getFirebaseAuthClient();
     if (!auth) {
@@ -229,29 +237,29 @@ export function AuthFlowCard({
     <div className="section-shell flex py-16 sm:py-20">
       <div className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(340px,0.68fr)] lg:items-start">
         <div className="max-w-2xl">
-          <div className="eyebrow">
+          <div className="eyebrow reveal-1">
             {mode === "desktop" ? "Desktop sign-in" : "Authentication"}
           </div>
-          <h1 className="mt-6 text-4xl font-semibold text-white sm:text-5xl">
+          <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
             {mode === "desktop"
-              ? "Connect your desktop app to your LaunchStack account."
+              ? "Connect your desktop app to your projecto account."
               : "Sign in to sync billing, subscriptions, and desktop access."}
           </h1>
-          <p className="mt-5 text-lg leading-8 text-muted-strong">
+          <p className="reveal-3 mt-5 text-lg leading-8 text-muted-strong">
             {mode === "desktop"
-              ? "This page is opened by the Electron app so LaunchStack can start a secure browser-based sign-in, create a short-lived desktop auth token, and send you back to the app."
-              : "Choose Google or Apple sign-in. LaunchStack uses authentication only for account and subscription sync across your devices."}
+              ? "This page is opened by the Electron app so projecto can start a secure browser sign-in, create a short-lived desktop auth token, and send you back to the app."
+              : "Choose Google or Apple sign-in. projecto uses authentication only for account and subscription sync across your devices."}
           </p>
-          <div className="mt-8 space-y-3 text-sm text-muted">
-            <p>LaunchStack never uploads your source code.</p>
+          <div className="reveal-3 mt-8 space-y-3 text-sm text-muted">
+            <p>projecto never uploads your source code.</p>
             <p>Payments and subscriptions are handled securely through Dodo Payments.</p>
-            <p>Google sign-in is used only for account and subscription sync.</p>
+            <p>Google sign-in and Apple sign-in are used only for account and subscription sync.</p>
           </div>
         </div>
 
-        <Card className="max-w-xl">
-          <div className="text-sm uppercase tracking-[0.2em] text-muted">
-            {mode === "desktop" ? "Continue in browser" : "Continue to LaunchStack"}
+        <Card className="scan-line relative max-w-xl reveal-2">
+          <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+            {mode === "desktop" ? "Continue in browser" : "Continue to projecto"}
           </div>
           <div className="mt-6 space-y-4">
             <Button
@@ -288,11 +296,11 @@ export function AuthFlowCard({
             </Button>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-white/10 bg-white/4 p-4 text-sm leading-7 text-muted">
+          <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/20 p-4 text-sm leading-7 text-muted">
             <p>
               {mode === "desktop"
-                ? "After sign-in, LaunchStack creates a short-lived token and redirects you back to the desktop app through the launchstack:// protocol."
-                : "After sign-in, LaunchStack saves your user profile and takes you to pricing or account depending on where you started."}
+                ? "After sign-in, projecto creates a short-lived token and redirects you back to the desktop app through your configured desktop protocol."
+                : "After sign-in, projecto saves your user profile and takes you to pricing or account depending on where you started."}
             </p>
           </div>
 
@@ -303,7 +311,7 @@ export function AuthFlowCard({
             </p>
           ) : null}
           {status ? (
-            <p className="mt-5 inline-flex items-center gap-2 text-sm text-brand">
+            <p className="mt-5 inline-flex items-center gap-2 text-sm text-white">
               <LoaderCircle className="size-4 animate-spin" />
               {status}
             </p>

@@ -14,7 +14,7 @@ export function buildSubscriptionRecord(input: {
   const userId = existing?.userId ?? subscription.metadata.userId ?? "";
 
   if (!userId) {
-    throw new Error("Unable to map Dodo subscription event to a LaunchStack user.");
+    throw new Error("Unable to map Dodo subscription event to a projecto user.");
   }
 
   return {

@@ -5,7 +5,7 @@ import { PricingPageClient } from "@/components/pricing/pricing-page-client";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Free and Pro pricing for LaunchStack.",
+  description: "Free and Pro pricing for projecto.",
 };
 
 export default function PricingPage() {

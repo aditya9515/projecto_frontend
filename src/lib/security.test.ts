@@ -2,8 +2,8 @@ import { addDays, addMinutes, createOpaqueToken, isExpired, sha256 } from "@/lib
 
 describe("security helpers", () => {
   it("hashes input deterministically", () => {
-    expect(sha256("launchstack")).toBe(sha256("launchstack"));
-    expect(sha256("launchstack")).not.toBe(sha256("launchstack-pro"));
+    expect(sha256("projecto")).toBe(sha256("projecto"));
+    expect(sha256("projecto")).not.toBe(sha256("projecto-pro"));
   });
 
   it("creates opaque random-looking tokens", () => {

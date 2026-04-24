@@ -12,7 +12,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "glass-panel surface-outline rounded-3xl p-6 sm:p-8",
+        "glass-panel surface-outline card-hover rounded-[2rem] p-6 sm:p-8",
         className,
       )}
     >

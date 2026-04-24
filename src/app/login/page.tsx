@@ -5,7 +5,7 @@ import { AuthFlowCard } from "@/components/auth/auth-flow-card";
 
 export const metadata: Metadata = {
   title: "Login",
-  description: "Sign in to LaunchStack with Google or Apple.",
+  description: "Sign in to projecto with Google or Apple.",
 };
 
 export default function LoginPage() {

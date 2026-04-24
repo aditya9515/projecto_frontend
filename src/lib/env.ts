@@ -16,7 +16,7 @@ const dodoEnvSchema = z.object({
 
 const appRuntimeEnvSchema = z.object({
   APP_BASE_URL: z.string().url(),
-  DESKTOP_PROTOCOL: z.string().min(1).default("launchstack://"),
+  DESKTOP_PROTOCOL: z.string().min(1).default("projecto://"),
   DESKTOP_ALLOWED_ORIGINS: z.string().optional(),
 });
 
@@ -151,7 +151,7 @@ export function getFirebaseProjectId() {
 
 export function getOptionalAppConfig() {
   return {
-    desktopProtocol: process.env.DESKTOP_PROTOCOL ?? "launchstack://",
+    desktopProtocol: process.env.DESKTOP_PROTOCOL ?? "projecto://",
     appBaseUrl: process.env.APP_BASE_URL ?? "http://localhost:3000",
     downloadUrl: publicEnv.appDownloadUrl,
   };

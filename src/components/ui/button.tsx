@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 
 const buttonStyles = {
   primary:
-    "bg-brand-strong text-slate-950 shadow-[0_18px_44px_rgba(56,189,248,0.24)] hover:bg-[#7dd3fc]",
+    "bg-brand-strong text-black shadow-[0_16px_44px_rgba(255,255,255,0.08)] hover:bg-zinc-200",
   secondary:
-    "border border-border-strong bg-white/6 text-foreground hover:bg-white/10",
+    "border border-border-strong bg-white/4 text-foreground hover:bg-white/9",
   ghost:
-    "text-muted-strong hover:bg-white/6 hover:text-white",
+    "text-muted-strong hover:bg-white/5 hover:text-white",
 };
 
 interface CommonButtonProps {
@@ -38,11 +38,11 @@ export function Button(props: ButtonProps | LinkButtonProps) {
       ...linkProps
     } = props as LinkButtonProps;
     const classes = cn(
-      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
+      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
       buttonStyles[variant],
       className,
     );
-    const isExternal = href.startsWith("http") || href.startsWith("launchstack://");
+    const isExternal = /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(href);
 
     if (isExternal) {
       return (
@@ -66,7 +66,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     ...buttonProps
   } = props as ButtonProps;
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
     buttonStyles[variant],
     className,
   );

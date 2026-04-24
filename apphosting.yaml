@@ -24,7 +24,7 @@ env:
       - RUNTIME
 
   - variable: NEXT_PUBLIC_APP_DOWNLOAD_URL
-    value: https://downloads.launchstack.app
+    value: https://projecto.adityakosuru.online/download
     availability:
       - BUILD
       - RUNTIME
@@ -54,7 +54,7 @@ env:
       - RUNTIME
 
   - variable: DESKTOP_PROTOCOL
-    value: launchstack://
+    value: projecto://
     availability:
       - BUILD
       - RUNTIME

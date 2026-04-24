@@ -5,7 +5,7 @@ import { getOptionalAppConfig } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Checkout Success",
-  description: "LaunchStack payment success and subscription sync.",
+  description: "projecto payment success and subscription sync.",
 };
 
 export default function CheckoutSuccessPage() {
