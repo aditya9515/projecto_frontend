@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
 import { getUserProfile, listSubscriptionsForUser } from "@/lib/firestore";
-import { normalizeSubscription, selectPrimarySubscription } from "@/lib/subscriptions";
+import { normalizeSubscription, selectPrimarySubscription, withPlanEntitlements } from "@/lib/subscriptions";
 
 export const runtime = "nodejs";
 
@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
     ]);
 
     const primarySubscription = selectPrimarySubscription(subscriptions);
-    const summary = normalizeSubscription(primarySubscription);
+    const summary = withPlanEntitlements(
+      normalizeSubscription(primarySubscription),
+    );
 
     return NextResponse.json({
       email: profile?.email ?? decoded.email ?? null,

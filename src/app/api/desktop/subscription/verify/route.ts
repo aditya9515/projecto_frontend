@@ -5,7 +5,7 @@ import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } 
 import { getAppRuntimeEnv } from "@/lib/env";
 import { getDesktopSession, listSubscriptionsForUser, touchDesktopSession } from "@/lib/firestore";
 import { isExpired, nowIso, sha256 } from "@/lib/security";
-import { normalizeSubscription, selectPrimarySubscription } from "@/lib/subscriptions";
+import { normalizeSubscription, selectPrimarySubscription, withPlanEntitlements } from "@/lib/subscriptions";
 
 export const runtime = "nodejs";
 
@@ -58,12 +58,14 @@ export async function POST(request: NextRequest) {
         await listSubscriptionsForUser(session.userId),
       ),
     );
+    const subscriptionWithEntitlements = withPlanEntitlements(subscription);
 
     return NextResponse.json(
       {
-        plan: subscription.plan,
-        status: subscription.status,
-        expiresAt: subscription.expiresAt,
+        plan: subscriptionWithEntitlements.plan,
+        status: subscriptionWithEntitlements.status,
+        expiresAt: subscriptionWithEntitlements.expiresAt,
+        entitlements: subscriptionWithEntitlements.entitlements,
         lastVerifiedAt: nowIso(),
       },
       {

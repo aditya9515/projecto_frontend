@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { SuccessPanel } from "@/components/checkout/success-panel";
-import { getOptionalAppConfig } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Checkout Success",
@@ -9,7 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutSuccessPage() {
-  const { desktopProtocol } = getOptionalAppConfig();
-
-  return <SuccessPanel desktopProtocol={desktopProtocol} />;
+  return <SuccessPanel />;
 }

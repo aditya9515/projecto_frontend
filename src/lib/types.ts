@@ -58,9 +58,15 @@ export interface DesktopAuthTokenRecord {
   id: string;
   userId: string;
   tokenHash: string;
+  stateHash?: string | null;
   expiresAt: string;
   used: boolean;
   createdAt: string;
+}
+
+export interface PlanEntitlements {
+  defaultDirectoryLimit: number | null;
+  canChangeDefaultDirectories: boolean;
 }
 
 export interface AppSubscriptionSnapshot {
@@ -72,6 +78,14 @@ export interface AppSubscriptionSnapshot {
   rawStatus?: string;
   cancelAtPeriodEnd?: boolean;
   billingCycle?: BillingCycle;
+  entitlements?: PlanEntitlements;
+}
+
+export interface DesktopCallbackPayload {
+  code: string;
+  state: string;
+  expiresAt: string;
+  redirectUrl: string;
 }
 
 export interface CheckoutIntent {

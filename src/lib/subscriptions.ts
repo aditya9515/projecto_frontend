@@ -1,5 +1,6 @@
 import type {
   AppPlan,
+  PlanEntitlements,
   AppSubscriptionSnapshot,
   BillingCycle,
   SubscriptionRecord,
@@ -7,6 +8,7 @@ import type {
 
 const endOfTermStatuses = new Set(["cancelled", "failed", "on_hold"]);
 const activeStatuses = new Set(["active", "pending"]);
+export const FREE_DEFAULT_DIRECTORY_LIMIT = 5;
 
 function toTimestamp(value?: string | null) {
   if (!value) {
@@ -116,6 +118,29 @@ export function normalizeSubscription(
   }
 
   return { plan: "free", status: "none" };
+}
+
+export function getPlanEntitlements(
+  subscription: Pick<AppSubscriptionSnapshot, "plan" | "status">,
+): PlanEntitlements {
+  const hasUnlimitedDirectories =
+    subscription.plan === "pro" && subscription.status === "active";
+
+  return {
+    defaultDirectoryLimit: hasUnlimitedDirectories
+      ? null
+      : FREE_DEFAULT_DIRECTORY_LIMIT,
+    canChangeDefaultDirectories: hasUnlimitedDirectories,
+  };
+}
+
+export function withPlanEntitlements(
+  subscription: AppSubscriptionSnapshot,
+): AppSubscriptionSnapshot {
+  return {
+    ...subscription,
+    entitlements: getPlanEntitlements(subscription),
+  };
 }
 
 export function getPlanLabel(plan: AppPlan) {

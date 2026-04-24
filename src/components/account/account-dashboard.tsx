@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CreditCard, LoaderCircle, LogOut, ShieldCheck } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { authorizedFetch } from "@/lib/client-api";
@@ -189,6 +190,12 @@ export function AccountDashboard() {
             Billing actions
           </div>
           <div className="mt-6 space-y-4">
+            <ContinueInDesktopButton
+              className="w-full"
+              subscription={subscription}
+              user={user}
+              variant="secondary"
+            />
             <Button
               className="w-full justify-between"
               disabled={billingBusy}

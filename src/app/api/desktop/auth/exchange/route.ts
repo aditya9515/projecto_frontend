@@ -6,20 +6,30 @@ import { getAppRuntimeEnv } from "@/lib/env";
 import {
   consumeDesktopAuthToken,
   createDesktopSession,
+  getDesktopAuthToken,
   getUserProfile,
   listSubscriptionsForUser,
 } from "@/lib/firestore";
 import { addDays, createOpaqueToken, isExpired, nowIso, sha256 } from "@/lib/security";
-import { normalizeSubscription, selectPrimarySubscription } from "@/lib/subscriptions";
+import { normalizeSubscription, selectPrimarySubscription, withPlanEntitlements } from "@/lib/subscriptions";
 
 export const runtime = "nodejs";
 
-const bodySchema = z.object({
-  token: z.string().min(1),
+const desktopBaseSchema = z.object({
   deviceId: z.string().min(1),
   deviceName: z.string().min(1),
   platform: z.enum(["windows", "macos", "linux"]),
 });
+
+const bodySchema = z.union([
+  desktopBaseSchema.extend({
+    token: z.string().min(1),
+  }),
+  desktopBaseSchema.extend({
+    code: z.string().min(1),
+    state: z.string().min(1),
+  }),
+]);
 
 export function OPTIONS(request: NextRequest) {
   const env = getAppRuntimeEnv();
@@ -40,7 +50,32 @@ export async function POST(request: NextRequest) {
       env.DESKTOP_ALLOWED_ORIGINS,
     );
     const body = bodySchema.parse(await request.json());
-    const tokenHash = sha256(body.token);
+    const codeOrToken = "code" in body ? body.code : body.token;
+    const tokenHash = sha256(codeOrToken);
+    const existingTokenRecord = await getDesktopAuthToken(tokenHash);
+
+    if (!existingTokenRecord) {
+      return NextResponse.json(
+        { error: "Desktop auth token is invalid or expired." },
+        {
+          status: 401,
+          headers: buildDesktopCorsHeaders(allowedOrigin),
+        },
+      );
+    }
+
+    if (existingTokenRecord.stateHash) {
+      if (!("state" in body) || sha256(body.state) !== existingTokenRecord.stateHash) {
+        return NextResponse.json(
+          { error: "Desktop auth state is invalid or expired." },
+          {
+            status: 401,
+            headers: buildDesktopCorsHeaders(allowedOrigin),
+          },
+        );
+      }
+    }
+
     const tokenRecord = await consumeDesktopAuthToken(tokenHash);
 
     if (!tokenRecord || isExpired(tokenRecord.expiresAt)) {
@@ -70,8 +105,8 @@ export async function POST(request: NextRequest) {
 
     const desktopSessionToken = createOpaqueToken();
     const desktopSessionHash = sha256(desktopSessionToken);
-    const subscription = normalizeSubscription(
-      selectPrimarySubscription(subscriptions),
+    const subscription = withPlanEntitlements(
+      normalizeSubscription(selectPrimarySubscription(subscriptions)),
     );
     const lastVerifiedAt = nowIso();
 
@@ -99,6 +134,7 @@ export async function POST(request: NextRequest) {
           plan: subscription.plan,
           status: subscription.status,
           expiresAt: subscription.expiresAt,
+          entitlements: subscription.entitlements,
         },
       },
       {

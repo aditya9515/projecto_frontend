@@ -1,4 +1,10 @@
-import { normalizeSubscription, selectPrimarySubscription } from "@/lib/subscriptions";
+import {
+  FREE_DEFAULT_DIRECTORY_LIMIT,
+  getPlanEntitlements,
+  normalizeSubscription,
+  selectPrimarySubscription,
+  withPlanEntitlements,
+} from "@/lib/subscriptions";
 import type { SubscriptionRecord } from "@/lib/types";
 
 const subscription = (overrides: Partial<SubscriptionRecord>): SubscriptionRecord => ({
@@ -62,5 +68,26 @@ describe("subscription helpers", () => {
         new Date("2026-04-24T00:00:00.000Z"),
       ).status,
     ).toBe("expired");
+  });
+
+  it("limits free users to five default directories that cannot be changed", () => {
+    expect(getPlanEntitlements({ plan: "free", status: "none" })).toEqual({
+      defaultDirectoryLimit: FREE_DEFAULT_DIRECTORY_LIMIT,
+      canChangeDefaultDirectories: false,
+    });
+  });
+
+  it("gives active pro users unlimited default directories and change access", () => {
+    expect(
+      withPlanEntitlements(
+        normalizeSubscription(
+          subscription({ status: "active", plan: "pro" }),
+          new Date("2026-04-24T00:00:00.000Z"),
+        ),
+      ).entitlements,
+    ).toEqual({
+      defaultDirectoryLimit: null,
+      canChangeDefaultDirectories: true,
+    });
   });
 });

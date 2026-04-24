@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { authorizedFetch } from "@/lib/client-api";
 import type { AppSubscriptionSnapshot } from "@/lib/types";
 import { formatDateOnly } from "@/lib/utils";
 
-export function SuccessPanel({ desktopProtocol }: { desktopProtocol: string }) {
+export function SuccessPanel() {
   const { user, loading } = useAuth();
   const [subscription, setSubscription] = useState<AppSubscriptionSnapshot | null>(
     null,
@@ -101,9 +102,11 @@ export function SuccessPanel({ desktopProtocol }: { desktopProtocol: string }) {
         </div>
 
         <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-          <Button href={`${desktopProtocol}subscription/success`}>
-            Open projecto App
-          </Button>
+          <ContinueInDesktopButton
+            autoStart
+            subscription={subscription}
+            user={user}
+          />
           <Button href="/account" variant="secondary">
             Go to account
           </Button>

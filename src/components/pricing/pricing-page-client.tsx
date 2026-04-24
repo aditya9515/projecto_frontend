@@ -5,11 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Check, LoaderCircle, ShieldCheck } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { buildCheckoutLoginHref, parseBillingCycle } from "@/lib/auth-routing";
 import { authorizedFetch } from "@/lib/client-api";
-import type { BillingCycle } from "@/lib/types";
+import type { AppSubscriptionSnapshot, BillingCycle } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const plans = {
@@ -50,6 +51,9 @@ export function PricingPageClient() {
   const searchParams = useSearchParams();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     parseBillingCycle(searchParams.get("billing")),
+  );
+  const [subscription, setSubscription] = useState<AppSubscriptionSnapshot | null>(
+    null,
   );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,6 +117,39 @@ export function PricingPageClient() {
     void startCheckout(billingCycle);
   }, [billingCycle, hasCheckoutIntent, isSubmitting, loading, startCheckout, user]);
 
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    let active = true;
+
+    void (async () => {
+      try {
+        const response = await authorizedFetch(user, "/api/subscription/status");
+        const payload = (await response.json()) as AppSubscriptionSnapshot & {
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Unable to load subscription state.");
+        }
+
+        if (active) {
+          setSubscription(payload);
+        }
+      } catch {
+        if (active) {
+          setSubscription(null);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
   const proPricing =
     billingCycle === "yearly"
       ? {
@@ -125,6 +162,10 @@ export function PricingPageClient() {
           cadence: plans.pro.monthlyLabel,
           badge: "Monthly",
         };
+  const hasActiveDesktopAccess =
+    user != null &&
+    subscription?.plan === "pro" &&
+    subscription.status === "active";
 
   return (
     <div className="section-shell py-16 sm:py-20">
@@ -211,23 +252,32 @@ export function PricingPageClient() {
             ))}
           </ul>
           <div className="mt-8 space-y-4">
-            <Button
-              className="w-full"
-              disabled={isSubmitting || loading}
-              onClick={() => void startCheckout(billingCycle)}
-              type="button"
-            >
-              {isSubmitting ? (
-                <>
-                  <LoaderCircle className="size-4 animate-spin" />
-                  Opening secure checkout
-                </>
-              ) : user ? (
-                "Upgrade to Pro"
-              ) : (
-                "Sign in before checkout"
-              )}
-            </Button>
+            {hasActiveDesktopAccess ? (
+              <ContinueInDesktopButton
+                className="w-full"
+                label="Continue in Desktop App"
+                subscription={subscription}
+                user={user}
+              />
+            ) : (
+              <Button
+                className="w-full"
+                disabled={isSubmitting || loading}
+                onClick={() => void startCheckout(billingCycle)}
+                type="button"
+              >
+                {isSubmitting ? (
+                  <>
+                    <LoaderCircle className="size-4 animate-spin" />
+                    Opening secure checkout
+                  </>
+                ) : user ? (
+                  "Upgrade to Pro"
+                ) : (
+                  "Sign in before checkout"
+                )}
+              </Button>
+            )}
             <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4 text-sm text-muted">
               <div className="flex items-center gap-2 font-semibold text-white">
                 <ShieldCheck className="size-4 text-white" />
