@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
-import { issueDesktopCallbackPayload } from "@/lib/desktop-auth";
+import { DesktopAuthError, issueDesktopCallbackPayload } from "@/lib/desktop-auth";
 
 export const runtime = "nodejs";
 
@@ -14,6 +14,16 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (error instanceof DesktopAuthError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: error.code,
+        },
+        { status: error.status },
+      );
     }
 
     return NextResponse.json(

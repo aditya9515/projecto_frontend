@@ -6,6 +6,9 @@ export type SubscriptionAccessStatus =
   | "cancelled"
   | "none";
 export type DesktopPlatform = "windows" | "macos" | "linux";
+export type ProjectDetectionLevel = "basic" | "advanced";
+export type ProjectThemeMode = "light" | "dark";
+export type ProjectStorage = "firestore";
 export type DodoSubscriptionStatus =
   | "pending"
   | "active"
@@ -62,9 +65,20 @@ export interface DesktopAuthTokenRecord {
   expiresAt: string;
   used: boolean;
   createdAt: string;
+  usedAt?: string;
 }
 
-export interface PlanEntitlements {
+export interface DesktopEntitlements {
+  maxProjects: number | null;
+  canChangeProjectDirectories: boolean;
+  maxConcurrentLaunches: number | null;
+  canBulkImport: boolean;
+  canBulkScan: boolean;
+  canUseBasicThemes: boolean;
+  canUsePremiumThemes: boolean;
+  projectStorage: ProjectStorage;
+  requiresOnline: true;
+  projectDetectionLevel: ProjectDetectionLevel;
   defaultDirectoryLimit: number | null;
   canChangeDefaultDirectories: boolean;
 }
@@ -78,7 +92,7 @@ export interface AppSubscriptionSnapshot {
   rawStatus?: string;
   cancelAtPeriodEnd?: boolean;
   billingCycle?: BillingCycle;
-  entitlements?: PlanEntitlements;
+  entitlements?: DesktopEntitlements;
 }
 
 export interface DesktopCallbackPayload {
@@ -97,4 +111,28 @@ export interface AuthSyncPayload {
   displayName: string;
   photoURL: string | null;
   providers: string[];
+}
+
+export interface ProjectDirectoryRecord {
+  id: string;
+  userId: string;
+  name: string;
+  directoryPath: string;
+  detectionLevel: ProjectDetectionLevel;
+  detectionSummary: string | null;
+  themeMode: ProjectThemeMode;
+  themePreset: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lastLaunchedAt: string | null;
+}
+
+export interface ProjectDirectoryMutationInput {
+  name?: string;
+  directoryPath?: string;
+  detectionLevel?: ProjectDetectionLevel;
+  detectionSummary?: string | null;
+  themeMode?: ProjectThemeMode;
+  themePreset?: string | null;
+  lastLaunchedAt?: string | null;
 }

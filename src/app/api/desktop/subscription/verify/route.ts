@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } from "@/lib/cors";
 import { getAppRuntimeEnv } from "@/lib/env";
-import { getDesktopSession, listSubscriptionsForUser, touchDesktopSession } from "@/lib/firestore";
+import { getDesktopSession, getUserProfile, listSubscriptionsForUser, touchDesktopSession } from "@/lib/firestore";
 import { isExpired, nowIso, sha256 } from "@/lib/security";
 import { normalizeSubscription, selectPrimarySubscription, withPlanEntitlements } from "@/lib/subscriptions";
 
@@ -53,10 +53,12 @@ export async function POST(request: NextRequest) {
 
     await touchDesktopSession(sessionHash);
 
+    const [subscriptions, profile] = await Promise.all([
+      listSubscriptionsForUser(session.userId),
+      getUserProfile(session.userId),
+    ]);
     const subscription = normalizeSubscription(
-      selectPrimarySubscription(
-        await listSubscriptionsForUser(session.userId),
-      ),
+      selectPrimarySubscription(subscriptions),
     );
     const subscriptionWithEntitlements = withPlanEntitlements(subscription);
 
@@ -64,6 +66,7 @@ export async function POST(request: NextRequest) {
       {
         plan: subscriptionWithEntitlements.plan,
         status: subscriptionWithEntitlements.status,
+        email: profile?.email ?? undefined,
         expiresAt: subscriptionWithEntitlements.expiresAt,
         entitlements: subscriptionWithEntitlements.entitlements,
         lastVerifiedAt: nowIso(),

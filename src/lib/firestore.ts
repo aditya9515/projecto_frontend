@@ -2,6 +2,7 @@ import { getAdminDb } from "@/lib/firebase/admin";
 import type {
   DesktopAuthTokenRecord,
   DesktopSessionRecord,
+  ProjectDirectoryRecord,
   SubscriptionRecord,
   UserProfileRecord,
 } from "@/lib/types";
@@ -10,6 +11,7 @@ const USERS = "users";
 const SUBSCRIPTIONS = "subscriptions";
 const DESKTOP_AUTH_TOKENS = "desktopAuthTokens";
 const DESKTOP_SESSIONS = "desktopSessions";
+const PROJECT_DIRECTORIES = "projectDirectories";
 const PROCESSED_WEBHOOKS = "processedWebhooks";
 
 export async function upsertUserProfile(record: UserProfileRecord) {
@@ -136,4 +138,33 @@ export async function touchDesktopSession(id: string) {
     },
     { merge: true },
   );
+}
+
+export async function listProjectDirectoriesForUser(userId: string) {
+  const snapshot = await getAdminDb()
+    .collection(PROJECT_DIRECTORIES)
+    .where("userId", "==", userId)
+    .get();
+
+  return snapshot.docs.map((doc) => doc.data() as ProjectDirectoryRecord);
+}
+
+export async function getProjectDirectoryById(projectId: string) {
+  const snapshot = await getAdminDb()
+    .collection(PROJECT_DIRECTORIES)
+    .doc(projectId)
+    .get();
+
+  return snapshot.exists ? (snapshot.data() as ProjectDirectoryRecord) : null;
+}
+
+export async function upsertProjectDirectory(record: ProjectDirectoryRecord) {
+  await getAdminDb()
+    .collection(PROJECT_DIRECTORIES)
+    .doc(record.id)
+    .set(record, { merge: true });
+}
+
+export async function deleteProjectDirectory(projectId: string) {
+  await getAdminDb().collection(PROJECT_DIRECTORIES).doc(projectId).delete();
 }

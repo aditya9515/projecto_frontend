@@ -1,5 +1,6 @@
 import {
   FREE_DEFAULT_DIRECTORY_LIMIT,
+  FREE_MAX_CONCURRENT_LAUNCHES,
   getPlanEntitlements,
   normalizeSubscription,
   selectPrimarySubscription,
@@ -72,6 +73,16 @@ describe("subscription helpers", () => {
 
   it("limits free users to five default directories that cannot be changed", () => {
     expect(getPlanEntitlements({ plan: "free", status: "none" })).toEqual({
+      maxProjects: FREE_DEFAULT_DIRECTORY_LIMIT,
+      canChangeProjectDirectories: false,
+      maxConcurrentLaunches: FREE_MAX_CONCURRENT_LAUNCHES,
+      canBulkImport: false,
+      canBulkScan: false,
+      canUseBasicThemes: true,
+      canUsePremiumThemes: false,
+      projectStorage: "firestore",
+      requiresOnline: true,
+      projectDetectionLevel: "basic",
       defaultDirectoryLimit: FREE_DEFAULT_DIRECTORY_LIMIT,
       canChangeDefaultDirectories: false,
     });
@@ -86,6 +97,16 @@ describe("subscription helpers", () => {
         ),
       ).entitlements,
     ).toEqual({
+      maxProjects: null,
+      canChangeProjectDirectories: true,
+      maxConcurrentLaunches: null,
+      canBulkImport: true,
+      canBulkScan: true,
+      canUseBasicThemes: true,
+      canUsePremiumThemes: true,
+      projectStorage: "firestore",
+      requiresOnline: true,
+      projectDetectionLevel: "advanced",
       defaultDirectoryLimit: null,
       canChangeDefaultDirectories: true,
     });

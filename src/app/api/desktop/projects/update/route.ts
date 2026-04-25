@@ -3,25 +3,13 @@ import { z } from "zod";
 
 import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } from "@/lib/cors";
 import { getAppRuntimeEnv } from "@/lib/env";
-import { DesktopAuthError, exchangeDesktopCallbackCode } from "@/lib/desktop-auth";
+import { requireDesktopSession, DesktopSessionError } from "@/lib/desktop-session";
+import { ProjectDirectoryError, updateUserProjectDirectory } from "@/lib/project-directories";
+import { desktopProjectSessionSchema, projectDirectoryUpdateSchema } from "@/lib/project-directory-schemas";
 
 export const runtime = "nodejs";
 
-const desktopBaseSchema = z.object({
-  deviceId: z.string().min(1),
-  deviceName: z.string().min(1).optional(),
-  platform: z.enum(["windows", "macos", "linux"]),
-});
-
-const bodySchema = z.union([
-  desktopBaseSchema.extend({
-    token: z.string().min(1),
-  }),
-  desktopBaseSchema.extend({
-    code: z.string().min(1),
-    state: z.string().min(1),
-  }),
-]);
+const bodySchema = desktopProjectSessionSchema.merge(projectDirectoryUpdateSchema);
 
 export function OPTIONS(request: NextRequest) {
   const env = getAppRuntimeEnv();
@@ -43,20 +31,12 @@ export async function POST(request: NextRequest) {
       env.DESKTOP_ALLOWED_ORIGINS,
     );
     const body = bodySchema.parse(await request.json());
-    const result = await exchangeDesktopCallbackCode({
-      code: "code" in body ? body.code : body.token,
-      state: "state" in body ? body.state : undefined,
-      deviceId: body.deviceId,
-      deviceName: body.deviceName,
-      platform: body.platform,
-    });
+    const session = await requireDesktopSession(body);
+    const result = await updateUserProjectDirectory(session.userId, body.projectId, body);
 
-    return NextResponse.json(
-      result,
-      {
-        headers: buildDesktopCorsHeaders(allowedOrigin),
-      },
-    );
+    return NextResponse.json(result, {
+      headers: buildDesktopCorsHeaders(allowedOrigin),
+    });
   } catch (error) {
     if (error instanceof Error && error.message === "Origin not allowed") {
       return NextResponse.json(
@@ -67,17 +47,14 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid desktop auth exchange request.", details: error.flatten() },
+        { error: "Invalid desktop project update request.", details: error.flatten() },
         { status: 400 },
       );
     }
 
-    if (error instanceof DesktopAuthError) {
+    if (error instanceof DesktopSessionError || error instanceof ProjectDirectoryError) {
       return NextResponse.json(
-        {
-          error: error.message,
-          code: error.code,
-        },
+        { error: error.message, code: error.code },
         {
           status: error.status,
           headers: buildDesktopCorsHeaders(allowedOrigin),
@@ -90,7 +67,7 @@ export async function POST(request: NextRequest) {
         error:
           error instanceof Error
             ? error.message
-            : "Unable to exchange desktop auth token.",
+            : "Unable to update desktop project directory.",
       },
       { status: 500 },
     );

@@ -1,14 +1,15 @@
 import type {
   AppPlan,
-  PlanEntitlements,
   AppSubscriptionSnapshot,
   BillingCycle,
+  DesktopEntitlements,
   SubscriptionRecord,
 } from "@/lib/types";
 
 const endOfTermStatuses = new Set(["cancelled", "failed", "on_hold"]);
 const activeStatuses = new Set(["active", "pending"]);
 export const FREE_DEFAULT_DIRECTORY_LIMIT = 5;
+export const FREE_MAX_CONCURRENT_LAUNCHES = 1;
 
 function toTimestamp(value?: string | null) {
   if (!value) {
@@ -122,15 +123,29 @@ export function normalizeSubscription(
 
 export function getPlanEntitlements(
   subscription: Pick<AppSubscriptionSnapshot, "plan" | "status">,
-): PlanEntitlements {
-  const hasUnlimitedDirectories =
+): DesktopEntitlements {
+  const hasProAccess =
     subscription.plan === "pro" && subscription.status === "active";
 
   return {
-    defaultDirectoryLimit: hasUnlimitedDirectories
+    maxProjects: hasProAccess
       ? null
       : FREE_DEFAULT_DIRECTORY_LIMIT,
-    canChangeDefaultDirectories: hasUnlimitedDirectories,
+    canChangeProjectDirectories: hasProAccess,
+    maxConcurrentLaunches: hasProAccess
+      ? null
+      : FREE_MAX_CONCURRENT_LAUNCHES,
+    canBulkImport: hasProAccess,
+    canBulkScan: hasProAccess,
+    canUseBasicThemes: true,
+    canUsePremiumThemes: hasProAccess,
+    projectStorage: "firestore",
+    requiresOnline: true,
+    projectDetectionLevel: hasProAccess ? "advanced" : "basic",
+    defaultDirectoryLimit: hasProAccess
+      ? null
+      : FREE_DEFAULT_DIRECTORY_LIMIT,
+    canChangeDefaultDirectories: hasProAccess,
   };
 }
 
