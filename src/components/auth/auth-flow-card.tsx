@@ -253,7 +253,14 @@ export function AuthFlowCard({
           <div className="reveal-3 mt-8 space-y-3 text-sm text-muted">
             <p>projecto never uploads your source code.</p>
             <p>Payments and subscriptions are handled securely through Dodo Payments.</p>
-            <p>Google sign-in and Apple sign-in are used only for account and subscription sync.</p>
+            <p>
+              Google sign-in and Apple sign-in are used only for account and
+              subscription sync.
+            </p>
+            <p>
+              Google accounts use Firebase&apos;s verified email identity.
+              projecto does not request Gmail inbox access.
+            </p>
           </div>
         </div>
 
