@@ -1,20 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050505;
+  --background: #060606;
   --foreground: #f5f5f5;
-  --muted: #9a9a9a;
-  --muted-strong: #c9c9c9;
-  --card: rgba(255, 255, 255, 0.035);
-  --card-strong: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --brand: #f5f5f5;
+  --muted: #9d9d9d;
+  --muted-strong: #d0d0d0;
+  --card: rgba(255, 255, 255, 0.04);
+  --card-strong: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --brand: #ededed;
   --brand-strong: #ffffff;
-  --emerald: #d4d4d4;
-  --amber: #f0f0f0;
-  --danger: #fca5a5;
+  --emerald: #d9d9d9;
+  --amber: #d7d0c4;
+  --danger: #d87575;
   --shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+  --page-top: #101010;
+  --page-bottom: #020202;
+  --page-radial-1: rgba(255, 255, 255, 0.08);
+  --page-radial-2: rgba(255, 255, 255, 0.04);
+  --page-overlay-top: rgba(255, 255, 255, 0.03);
+  --page-overlay-bottom: rgba(0, 0, 0, 0.18);
+  --glass-top: rgba(255, 255, 255, 0.05);
+  --glass-bottom: rgba(255, 255, 255, 0.025);
+  --outline-start: rgba(255, 255, 255, 0.24);
+  --outline-middle: rgba(255, 255, 255, 0.08);
+  --outline-end: rgba(255, 255, 255, 0.16);
+  --grid-line: rgba(255, 255, 255, 0.06);
+  --section-line: rgba(255, 255, 255, 0.14);
+  --hover-border: rgba(255, 255, 255, 0.18);
+  --selection-bg: rgba(255, 255, 255, 0.22);
+  --selection-foreground: #050505;
+}
+
+:root[data-theme="light"] {
+  --background: #f3f2ef;
+  --foreground: #171717;
+  --muted: #676767;
+  --muted-strong: #2f2f2f;
+  --card: rgba(17, 24, 39, 0.035);
+  --card-strong: rgba(17, 24, 39, 0.07);
+  --border: rgba(17, 24, 39, 0.1);
+  --border-strong: rgba(17, 24, 39, 0.16);
+  --brand: #111111;
+  --brand-strong: #090909;
+  --emerald: #3d3d3d;
+  --amber: #736a5c;
+  --danger: #b85d5d;
+  --shadow: 0 24px 72px rgba(17, 24, 39, 0.1);
+  --page-top: #ffffff;
+  --page-bottom: #eceae6;
+  --page-radial-1: rgba(17, 24, 39, 0.05);
+  --page-radial-2: rgba(17, 24, 39, 0.03);
+  --page-overlay-top: rgba(255, 255, 255, 0.52);
+  --page-overlay-bottom: rgba(255, 255, 255, 0.12);
+  --glass-top: rgba(255, 255, 255, 0.84);
+  --glass-bottom: rgba(255, 255, 255, 0.68);
+  --outline-start: rgba(17, 24, 39, 0.14);
+  --outline-middle: rgba(17, 24, 39, 0.05);
+  --outline-end: rgba(17, 24, 39, 0.1);
+  --grid-line: rgba(17, 24, 39, 0.06);
+  --section-line: rgba(17, 24, 39, 0.12);
+  --hover-border: rgba(17, 24, 39, 0.18);
+  --selection-bg: rgba(17, 24, 39, 0.18);
+  --selection-foreground: #ffffff;
 }
 
 @theme inline {
@@ -46,16 +95,19 @@ body {
 
 body {
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 32%),
-    radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.04), transparent 26%),
-    linear-gradient(180deg, #090909 0%, #050505 52%, #020202 100%);
+    radial-gradient(circle at top, var(--page-radial-1), transparent 32%),
+    radial-gradient(circle at 80% 0%, var(--page-radial-2), transparent 26%),
+    linear-gradient(180deg, var(--page-top) 0%, var(--background) 52%, var(--page-bottom) 100%);
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
 }
 
 ::selection {
-  background: rgba(255, 255, 255, 0.22);
-  color: #050505;
+  background: var(--selection-bg);
+  color: var(--selection-foreground);
 }
 
 a {
@@ -69,17 +121,13 @@ a {
 
 .page-ambient {
   background:
-    radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.09), transparent 24%),
-    radial-gradient(circle at 85% 0%, rgba(255, 255, 255, 0.05), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 16%, rgba(0, 0, 0, 0.18));
+    radial-gradient(circle at 15% 10%, var(--page-radial-1), transparent 24%),
+    radial-gradient(circle at 85% 0%, var(--page-radial-2), transparent 22%),
+    linear-gradient(180deg, var(--page-overlay-top), transparent 16%, var(--page-overlay-bottom));
 }
 
 .glass-panel {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.05),
-    rgba(255, 255, 255, 0.025)
-  );
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bottom));
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
@@ -96,13 +144,7 @@ a {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background:
-    linear-gradient(
-      140deg,
-      rgba(255, 255, 255, 0.26),
-      rgba(255, 255, 255, 0.06) 45%,
-      rgba(255, 255, 255, 0.16)
-    );
+  background: linear-gradient(140deg, var(--outline-start), var(--outline-middle) 45%, var(--outline-end));
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -113,8 +155,8 @@ a {
 
 .hairline-grid {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.86), transparent 82%);
 }
@@ -132,7 +174,7 @@ a {
 
 .card-hover:hover {
   transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: var(--hover-border);
 }
 
 .reveal-1 {
@@ -165,7 +207,7 @@ a {
   background: linear-gradient(
     180deg,
     transparent,
-    rgba(255, 255, 255, 0.08),
+    var(--card-strong),
     transparent
   );
   animation: scan-line 9s linear infinite;
@@ -183,12 +225,43 @@ a {
   right: 0;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.14),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, var(--section-line), transparent);
+}
+
+.account-stat {
+  @apply rounded-[1.4rem] border border-border bg-card p-4;
+}
+
+.account-label {
+  @apply font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted;
+}
+
+.account-value {
+  @apply mt-2 text-sm font-medium text-foreground;
+}
+
+.tone-chip {
+  @apply inline-flex items-center gap-2 rounded-full border border-border bg-card-strong px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-foreground;
+}
+
+.theme-option {
+  @apply rounded-[1.5rem] border border-border bg-card p-4 text-left transition;
+}
+
+.theme-option[data-active="true"] {
+  @apply border-border-strong bg-foreground text-background shadow-[0_16px_44px_rgba(0,0,0,0.12)];
+}
+
+.theme-option[data-active="true"] .theme-option-muted {
+  color: color-mix(in srgb, var(--background) 78%, transparent);
+}
+
+.theme-option[data-active="false"] {
+  @apply text-foreground hover:bg-card-strong;
+}
+
+.theme-option-muted {
+  color: var(--muted);
 }
 
 @keyframes reveal-up {

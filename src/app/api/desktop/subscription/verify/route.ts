@@ -3,9 +3,9 @@ import { z } from "zod";
 
 import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } from "@/lib/cors";
 import { getAppRuntimeEnv } from "@/lib/env";
-import { getDesktopSession, getUserProfile, listSubscriptionsForUser, touchDesktopSession } from "@/lib/firestore";
+import { getDesktopSession, getUserProfile, touchDesktopSession } from "@/lib/firestore";
+import { getProjectDirectoryAccess } from "@/lib/project-directories";
 import { isExpired, nowIso, sha256 } from "@/lib/security";
-import { normalizeSubscription, selectPrimarySubscription, withPlanEntitlements } from "@/lib/subscriptions";
 
 export const runtime = "nodejs";
 
@@ -53,22 +53,25 @@ export async function POST(request: NextRequest) {
 
     await touchDesktopSession(sessionHash);
 
-    const [subscriptions, profile] = await Promise.all([
-      listSubscriptionsForUser(session.userId),
+    const [access, profile] = await Promise.all([
+      getProjectDirectoryAccess(session.userId),
       getUserProfile(session.userId),
     ]);
-    const subscription = normalizeSubscription(
-      selectPrimarySubscription(subscriptions),
-    );
-    const subscriptionWithEntitlements = withPlanEntitlements(subscription);
 
     return NextResponse.json(
       {
-        plan: subscriptionWithEntitlements.plan,
-        status: subscriptionWithEntitlements.status,
+        plan: access.subscription.plan,
+        status: access.subscription.status,
         email: profile?.email ?? undefined,
-        expiresAt: subscriptionWithEntitlements.expiresAt,
-        entitlements: subscriptionWithEntitlements.entitlements,
+        name: profile?.displayName ?? undefined,
+        expiresAt: access.subscription.expiresAt,
+        currentPeriodEnd: access.subscription.currentPeriodEnd,
+        currentPeriodStart: access.subscription.currentPeriodStart,
+        rawStatus: access.subscription.rawStatus,
+        cancelAtPeriodEnd: access.subscription.cancelAtPeriodEnd,
+        billingCycle: access.subscription.billingCycle,
+        entitlements: access.entitlements,
+        archivedProjectCount: access.archivedProjectCount,
         lastVerifiedAt: nowIso(),
       },
       {

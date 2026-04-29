@@ -1,4 +1,4 @@
-# projecto Website + Billing Backend
+# Projecto Website + Billing Backend
 
 projecto is a Next.js web app that acts as the source of truth for:
 
@@ -9,7 +9,7 @@ projecto is a Next.js web app that acts as the source of truth for:
 - desktop auth token exchange
 - Electron subscription verification for Windows, macOS, and Linux
 
-The desktop app should trust this backend for Pro entitlement checks.
+The desktop app should trust this backend for effective Free/Pro entitlement checks, archived project reconciliation, and secure desktop session verification.
 
 ## Stack
 
@@ -102,8 +102,8 @@ On Firebase App Hosting, the app can also use the runtime service account when e
 ## 2. Configure Dodo Payments
 
 1. Create two Dodo products:
-   - Pro Monthly at `$12`
-   - Pro Yearly at `$96`
+   - Pro Monthly at `$8`
+   - Pro Yearly at `$80`
 2. Save their product IDs into:
    - `DODO_PRO_MONTHLY_PRODUCT_ID`
    - `DODO_PRO_YEARLY_PRODUCT_ID`
@@ -134,11 +134,30 @@ https://YOUR_DOMAIN/api/webhooks/dodo
    - `payment.failed`
    - `payment.succeeded`
 4. Maps Dodo data into Firestore `subscriptions`.
-5. Applies paid-through access rules:
+5. Reconciles effective project visibility after subscription changes.
+6. Applies paid-through access rules:
    - cancelled or failed subscriptions remain usable until `currentPeriodEnd`
-   - after the paid period ends, projecto returns `expired`
+   - after the paid period ends, Projecto returns `expired`
 
-The checkout flow attaches `userId`, `email`, `plan`, and `billingCycle` as Dodo metadata so webhook events can be tied back to the correct projecto user.
+The checkout flow attaches `userId`, `email`, `plan`, and `billingCycle` as Dodo metadata so webhook events can be tied back to the correct Projecto user.
+
+### Downgrade project retention
+
+When a user drops from effective `Pro` to effective `Free`, the backend keeps the 5 most recent project directories visible and archives the rest instead of deleting them.
+
+Ordering:
+
+1. `lastLaunchedAt DESC`
+2. `updatedAt DESC`
+3. `createdAt DESC`
+
+Archived records remain in Firestore with:
+
+- `archivedByPlan`
+- `archivedAt`
+- `archivedReason = "free_limit"`
+
+When the user returns to effective `Pro`, those archived projects are restored automatically.
 
 ## 4. How the Electron app redirects users to pricing
 
@@ -167,21 +186,21 @@ Flow:
 
 1. The user signs in with Google or Apple via Firebase Authentication.
 2. The web app calls `POST /api/auth/sync` to upsert the user record in Firestore.
-3. The web app calls `POST /api/desktop/auth/create`.
-4. The backend creates a short-lived single-use token and stores only its SHA-256 hash in `desktopAuthTokens`.
+3. The web app calls `POST /api/desktop/auth/create-code`.
+4. The backend creates a short-lived single-use callback code plus `state`, and stores only their SHA-256 hashes in `desktopAuthTokens`.
 5. The page redirects to:
 
 ```text
-projecto://auth/callback?token=TEMPORARY_TOKEN
+projecto://auth/callback?code=TEMPORARY_CODE&state=TEMPORARY_STATE
 ```
 
-The long-lived desktop session token is never sent in a browser redirect.
+The long-lived desktop session token is never sent in a browser redirect, and no Firebase ID token is ever placed in the desktop callback URL.
 
 ## 6. How desktop subscription verification works
 
 ### Exchange flow
 
-The desktop app sends the temporary token to:
+The desktop app sends the callback code to:
 
 ```text
 POST /api/desktop/auth/exchange
@@ -189,7 +208,8 @@ POST /api/desktop/auth/exchange
 
 with:
 
-- `token`
+- `code`
+- `state`
 - `deviceId`
 - `deviceName`
 - `platform`
@@ -224,7 +244,68 @@ The backend:
 3. reads the current user subscription from Firestore
 4. returns the minimal entitlement payload the desktop app needs
 
-## 7. Environment variables
+## 7. Manual Pro overrides for developers
+
+Projecto supports a backend-side override layer for support cases, internal testing, and manual grants without editing live Dodo subscription records.
+
+Precedence order:
+
+1. active manual override
+2. active Dodo subscription
+3. Free fallback
+
+Override records live in Firestore:
+
+```text
+subscriptionOverrides/{userId}
+```
+
+Each record can contain:
+
+- `plan`
+- `status`
+- `billingCycle`
+- optional `expiresAt`
+- `reason`
+- `updatedBy`
+- `updatedAt`
+- `createdAt`
+- `source = "manual_admin"`
+- optional `disabled`
+
+### Grant Pro manually
+
+```bash
+npm run admin:subscription-override -- --action grant --email user@example.com --billingCycle yearly --reason "support grant" --updatedBy "your-name"
+```
+
+You can also target a Firebase uid directly:
+
+```bash
+npm run admin:subscription-override -- --action grant --uid FIREBASE_UID --billingCycle monthly --reason "internal testing" --updatedBy "your-name"
+```
+
+Optional expiry:
+
+```bash
+npm run admin:subscription-override -- --action grant --email user@example.com --billingCycle monthly --expiresAt 2026-12-31T23:59:59.000Z --reason "promo" --updatedBy "your-name"
+```
+
+### Disable an override but keep the record
+
+```bash
+npm run admin:subscription-override -- --action disable --email user@example.com --updatedBy "your-name"
+```
+
+### Delete an override completely
+
+```bash
+npm run admin:subscription-override -- --action delete --email user@example.com --updatedBy "your-name"
+```
+
+Use manual override when you want to temporarily change effective access without modifying the user’s Dodo subscription. Once the override is disabled or deleted, Projecto falls back to the normal Dodo-backed state automatically.
+
+## 8. Environment variables
 
 Required:
 
@@ -248,7 +329,7 @@ Optional but recommended:
 - `DODO_ENVIRONMENT`
 - `DESKTOP_ALLOWED_ORIGINS`
 
-## 8. Deploy the web app
+## 9. Deploy the web app
 
 ### Firebase App Hosting
 
@@ -279,7 +360,7 @@ Optional but recommended:
 
 ### Desktop
 
-- `POST /api/desktop/auth/create`
+- `POST /api/desktop/auth/create-code`
 - `POST /api/desktop/auth/exchange`
 - `POST /api/desktop/subscription/verify`
 - `POST /api/desktop/license/activate`

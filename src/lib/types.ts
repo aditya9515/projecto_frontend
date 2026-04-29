@@ -5,6 +5,7 @@ export type SubscriptionAccessStatus =
   | "expired"
   | "cancelled"
   | "none";
+export type ProjectArchiveReason = "free_limit";
 export type DesktopPlatform = "windows" | "macos" | "linux";
 export type ProjectDetectionLevel = "basic" | "advanced";
 export type ProjectThemeMode = "light" | "dark";
@@ -57,6 +58,20 @@ export interface DesktopSessionRecord {
   revoked: boolean;
 }
 
+export interface SubscriptionOverrideRecord {
+  userId: string;
+  plan: AppPlan;
+  status: SubscriptionAccessStatus;
+  billingCycle: BillingCycle;
+  expiresAt?: string | null;
+  reason: string;
+  updatedBy: string;
+  updatedAt: string;
+  createdAt: string;
+  source: "manual_admin";
+  disabled?: boolean;
+}
+
 export interface DesktopAuthTokenRecord {
   id: string;
   userId: string;
@@ -93,6 +108,7 @@ export interface AppSubscriptionSnapshot {
   cancelAtPeriodEnd?: boolean;
   billingCycle?: BillingCycle;
   entitlements?: DesktopEntitlements;
+  archivedProjectCount?: number;
 }
 
 export interface DesktopCallbackPayload {
@@ -125,6 +141,9 @@ export interface ProjectDirectoryRecord {
   createdAt: string;
   updatedAt: string;
   lastLaunchedAt: string | null;
+  archivedByPlan: boolean;
+  archivedAt: string | null;
+  archivedReason: ProjectArchiveReason | null;
 }
 
 export interface ProjectDirectoryMutationInput {

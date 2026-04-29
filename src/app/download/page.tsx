@@ -32,7 +32,7 @@ export default function DownloadPage() {
     <div className="section-shell py-16 sm:py-20">
       <div className="mx-auto max-w-3xl text-center">
         <div className="eyebrow reveal-1 justify-center">Download</div>
-        <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+        <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
           projecto desktop rollout.
         </h1>
         <p className="reveal-3 mt-5 text-lg leading-8 text-muted-strong">
@@ -51,13 +51,13 @@ export default function DownloadPage() {
               key={platform.name}
               className={index === 0 ? "reveal-1" : index === 1 ? "reveal-2" : "reveal-3"}
             >
-              <div className="flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white">
+              <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
                 <Icon className="size-5" />
               </div>
-              <h2 className="mt-6 text-2xl font-semibold text-white">{platform.name}</h2>
+              <h2 className="mt-6 text-2xl font-semibold text-foreground">{platform.name}</h2>
               <p className="mt-3 text-sm leading-7 text-muted">{platform.detail}</p>
               <button
-                className="mt-8 inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/4 px-5 py-3 text-sm font-semibold text-muted-strong opacity-70"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold text-muted-strong opacity-70"
                 disabled
                 type="button"
               >
@@ -71,7 +71,7 @@ export default function DownloadPage() {
       <Card className="reveal-2 mx-auto mt-8 max-w-4xl">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-white">
+            <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-foreground">
               <ShieldCheck className="size-4" />
               Ready now
             </div>

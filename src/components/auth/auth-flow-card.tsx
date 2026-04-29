@@ -26,7 +26,7 @@ import { authorizedFetch } from "@/lib/client-api";
 import { getFirebaseAuthClient } from "@/lib/firebase/client";
 import { syncFirebaseUser } from "@/lib/firebase/sync";
 import { describeProviderConflict } from "@/lib/provider-conflict";
-import type { BillingCycle } from "@/lib/types";
+import type { BillingCycle, DesktopCallbackPayload } from "@/lib/types";
 
 function createProvider(kind: "google" | "apple") {
   if (kind === "google") {
@@ -93,33 +93,52 @@ export function AuthFlowCard({
   const nextPath = searchParams.get("next");
   const intent = searchParams.get("intent");
 
+  const resolveDesktopRedirect = useCallback((
+    payload: Partial<DesktopCallbackPayload> & {
+      error?: string;
+      token?: string;
+    },
+  ) => {
+    if (payload.redirectUrl && payload.code && payload.state) {
+      return payload.redirectUrl;
+    }
+
+    if (payload.token) {
+      return `${desktopProtocol ?? "projecto://"}auth/callback?token=${encodeURIComponent(payload.token)}`;
+    }
+
+    throw new Error(
+      payload.error ?? "Unable to create a desktop sign-in callback.",
+    );
+  }, [desktopProtocol]);
+
   const finalizeLogin = useCallback(
     async (activeUser: User) => {
       setError(null);
       await syncFirebaseUser(activeUser);
 
       if (mode === "desktop") {
-        setStatus("Creating a secure desktop sign-in token...");
+        setStatus("Creating a secure desktop sign-in callback...");
 
         const response = await authorizedFetch(
           activeUser,
-          "/api/desktop/auth/create",
+          "/api/desktop/auth/create-code",
           {
             method: "POST",
           },
         );
-        const payload = (await response.json()) as {
+        const payload = (await response.json()) as Partial<DesktopCallbackPayload> & {
           error?: string;
           token?: string;
         };
 
-        if (!response.ok || !payload.token) {
+        if (!response.ok) {
           throw new Error(
-            payload.error ?? "Unable to create desktop sign-in token.",
+            payload.error ?? "Unable to create desktop sign-in callback.",
           );
         }
 
-        window.location.href = `${desktopProtocol ?? "projecto://"}auth/callback?token=${encodeURIComponent(payload.token)}`;
+        window.location.href = resolveDesktopRedirect(payload);
         return;
       }
 
@@ -132,7 +151,7 @@ export function AuthFlowCard({
         }),
       );
     },
-    [billingCycle, desktopProtocol, intent, mode, nextPath, router],
+    [billingCycle, intent, mode, nextPath, resolveDesktopRedirect, router],
   );
 
   async function startSignIn(kind: "google" | "apple") {
@@ -240,14 +259,14 @@ export function AuthFlowCard({
           <div className="eyebrow reveal-1">
             {mode === "desktop" ? "Desktop sign-in" : "Authentication"}
           </div>
-          <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+          <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
             {mode === "desktop"
               ? "Connect your desktop app to your projecto account."
               : "Sign in to sync billing, subscriptions, and desktop access."}
           </h1>
           <p className="reveal-3 mt-5 text-lg leading-8 text-muted-strong">
             {mode === "desktop"
-              ? "This page is opened by the Electron app so projecto can start a secure browser sign-in, create a short-lived desktop auth token, and send you back to the app."
+              ? "This page is opened by the Electron app so projecto can start a secure browser sign-in, create a short-lived desktop callback, and send you back to the app."
               : "Choose Google or Apple sign-in. projecto uses authentication only for account and subscription sync across your devices."}
           </p>
           <div className="reveal-3 mt-8 space-y-3 text-sm text-muted">
@@ -265,7 +284,7 @@ export function AuthFlowCard({
         </div>
 
         <Card className="scan-line relative max-w-xl reveal-2">
-          <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+          <div className="account-label">
             {mode === "desktop" ? "Continue in browser" : "Continue to projecto"}
           </div>
           <div className="mt-6 space-y-4">
@@ -303,10 +322,10 @@ export function AuthFlowCard({
             </Button>
           </div>
 
-          <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/20 p-4 text-sm leading-7 text-muted">
+          <div className="mt-6 rounded-[1.5rem] border border-border bg-card p-4 text-sm leading-7 text-muted">
             <p>
               {mode === "desktop"
-                ? "After sign-in, projecto creates a short-lived token and redirects you back to the desktop app through your configured desktop protocol."
+                ? "After sign-in, projecto creates a short-lived desktop callback and redirects you back to the desktop app through your configured desktop protocol."
                 : "After sign-in, projecto saves your user profile and takes you to pricing or account depending on where you started."}
             </p>
           </div>
@@ -318,7 +337,7 @@ export function AuthFlowCard({
             </p>
           ) : null}
           {status ? (
-            <p className="mt-5 inline-flex items-center gap-2 text-sm text-white">
+            <p className="mt-5 inline-flex items-center gap-2 text-sm text-foreground">
               <LoaderCircle className="size-4 animate-spin" />
               {status}
             </p>

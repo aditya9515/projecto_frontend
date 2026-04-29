@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 
 const buttonStyles = {
   primary:
-    "bg-brand-strong text-black shadow-[0_16px_44px_rgba(255,255,255,0.08)] hover:bg-zinc-200",
+    "bg-foreground text-background shadow-[0_18px_48px_rgba(0,0,0,0.14)] hover:opacity-92",
   secondary:
-    "border border-border-strong bg-white/4 text-foreground hover:bg-white/9",
+    "border border-border-strong bg-card text-foreground hover:bg-card-strong",
   ghost:
-    "text-muted-strong hover:bg-white/5 hover:text-white",
+    "text-muted-strong hover:bg-card hover:text-foreground",
 };
 
 interface CommonButtonProps {
@@ -38,7 +38,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
       ...linkProps
     } = props as LinkButtonProps;
     const classes = cn(
-      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
+      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:opacity-60",
       buttonStyles[variant],
       className,
     );
@@ -66,7 +66,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     ...buttonProps
   } = props as ButtonProps;
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:opacity-60",
     buttonStyles[variant],
     className,
   );

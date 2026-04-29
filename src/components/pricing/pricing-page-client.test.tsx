@@ -26,11 +26,11 @@ describe("PricingPageClient", () => {
 
     expect(screen.getByText("Free")).toBeInTheDocument();
     expect(screen.getByText("Pro")).toBeInTheDocument();
-    expect(screen.getByText("$12")).toBeInTheDocument();
+    expect(screen.getByText("$8")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Yearly" }));
 
-    expect(screen.getByText("$96")).toBeInTheDocument();
-    expect(screen.getByText("Save 33%")).toBeInTheDocument();
+    expect(screen.getByText("$80")).toBeInTheDocument();
+    expect(screen.getByText("2 months free")).toBeInTheDocument();
   });
 });

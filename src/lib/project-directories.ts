@@ -2,18 +2,14 @@ import {
   deleteProjectDirectory,
   getProjectDirectoryById,
   listProjectDirectoriesForUser,
-  listSubscriptionsForUser,
   upsertProjectDirectory,
 } from "@/lib/firestore";
 import { createOpaqueToken, nowIso } from "@/lib/security";
-import {
-  normalizeSubscription,
-  selectPrimarySubscription,
-  withPlanEntitlements,
-} from "@/lib/subscriptions";
+import { getEffectiveSubscriptionAccess } from "@/lib/subscription-access";
 import type {
   DesktopEntitlements,
   ProjectDetectionLevel,
+  ProjectArchiveReason,
   ProjectDirectoryMutationInput,
   ProjectDirectoryRecord,
 } from "@/lib/types";
@@ -136,37 +132,46 @@ function ensureBulkImportAccess(entitlements: DesktopEntitlements) {
 }
 
 export async function getProjectDirectoryAccess(userId: string) {
-  const [projects, subscriptions] = await Promise.all([
+  const [projects, subscription] = await Promise.all([
     listProjectDirectoriesForUser(userId),
-    listSubscriptionsForUser(userId),
+    getEffectiveSubscriptionAccess(userId),
   ]);
-  const subscription = withPlanEntitlements(
-    normalizeSubscription(selectPrimarySubscription(subscriptions)),
+  const reconciledProjects = await reconcileProjectDirectoryVisibility(
+    projects,
+    subscription.entitlements!.maxProjects,
   );
 
   return {
-    projects: [...projects].sort((left, right) =>
-      right.updatedAt.localeCompare(left.updatedAt),
-    ),
+    projects: reconciledProjects.projects,
+    archivedProjects: reconciledProjects.archivedProjects,
+    allProjects: reconciledProjects.allProjects,
+    archivedProjectCount: reconciledProjects.archivedProjectCount,
     subscription,
     entitlements: subscription.entitlements!,
   };
 }
 
 export async function listUserProjectDirectories(userId: string) {
-  return getProjectDirectoryAccess(userId);
+  const access = await getProjectDirectoryAccess(userId);
+  return {
+    projects: access.projects,
+    archivedProjects: access.archivedProjects,
+    subscription: access.subscription,
+    entitlements: access.entitlements,
+    archivedProjectCount: access.archivedProjectCount,
+  };
 }
 
 export async function createUserProjectDirectory(
   userId: string,
   input: ProjectDirectoryMutationInput,
 ) {
-  const { projects, subscription, entitlements } =
+  const { allProjects, subscription, entitlements, archivedProjectCount } =
     await getProjectDirectoryAccess(userId);
   const directoryPath = normalizeDirectoryPath(input.directoryPath);
 
-  ensureProjectQuota(projects.length, 1, entitlements);
-  ensureUniqueDirectoryPath(projects, directoryPath);
+  ensureProjectQuota(allProjects.length, 1, entitlements);
+  ensureUniqueDirectoryPath(allProjects, directoryPath);
   ensureThemeAccess(input, entitlements);
 
   const now = nowIso();
@@ -178,11 +183,14 @@ export async function createUserProjectDirectory(
     detectionLevel: resolveDetectionLevel(input.detectionLevel, entitlements),
     detectionSummary: trimOrNull(input.detectionSummary),
     themeMode: input.themeMode ?? "dark",
-    themePreset: trimOrNull(input.themePreset),
-    createdAt: now,
-    updatedAt: now,
-    lastLaunchedAt: input.lastLaunchedAt ?? null,
-  };
+      themePreset: trimOrNull(input.themePreset),
+      createdAt: now,
+      updatedAt: now,
+      lastLaunchedAt: input.lastLaunchedAt ?? null,
+      archivedByPlan: false,
+      archivedAt: null,
+      archivedReason: null,
+    };
 
   await upsertProjectDirectory(project);
 
@@ -190,6 +198,7 @@ export async function createUserProjectDirectory(
     project,
     subscription,
     entitlements,
+    archivedProjectCount,
   };
 }
 
@@ -197,7 +206,7 @@ export async function bulkImportUserProjectDirectories(
   userId: string,
   inputs: ProjectDirectoryMutationInput[],
 ) {
-  const { projects, subscription, entitlements } =
+  const { allProjects, subscription, entitlements, archivedProjectCount } =
     await getProjectDirectoryAccess(userId);
 
   if (inputs.length === 0) {
@@ -209,9 +218,9 @@ export async function bulkImportUserProjectDirectories(
   }
 
   ensureBulkImportAccess(entitlements);
-  ensureProjectQuota(projects.length, inputs.length, entitlements);
+  ensureProjectQuota(allProjects.length, inputs.length, entitlements);
 
-  const existingPaths = new Set(projects.map((project) => project.directoryPath));
+  const existingPaths = new Set(allProjects.map((project) => project.directoryPath));
   const incomingPaths = new Set<string>();
   const createdAt = nowIso();
   const importedProjects = inputs.map((input) => {
@@ -240,6 +249,9 @@ export async function bulkImportUserProjectDirectories(
       createdAt,
       updatedAt: createdAt,
       lastLaunchedAt: input.lastLaunchedAt ?? null,
+      archivedByPlan: false,
+      archivedAt: null,
+      archivedReason: null,
     } satisfies ProjectDirectoryRecord;
   });
 
@@ -249,6 +261,7 @@ export async function bulkImportUserProjectDirectories(
     projects: importedProjects,
     subscription,
     entitlements,
+    archivedProjectCount,
   };
 }
 
@@ -270,24 +283,12 @@ export async function updateUserProjectDirectory(
     );
   }
 
-  const { projects, subscription, entitlements } = access;
+  const { allProjects, subscription, entitlements, archivedProjectCount } = access;
   const nextDirectoryPath =
     input.directoryPath === undefined
       ? existing.directoryPath
       : normalizeDirectoryPath(input.directoryPath);
-
-  if (
-    nextDirectoryPath !== existing.directoryPath &&
-    !entitlements.canChangeProjectDirectories
-  ) {
-    throw new ProjectDirectoryError(
-      "Changing project directories requires Projecto Pro.",
-      403,
-      "project_directory_change_locked",
-    );
-  }
-
-  ensureUniqueDirectoryPath(projects, nextDirectoryPath, existing.id);
+  ensureUniqueDirectoryPath(allProjects, nextDirectoryPath, existing.id);
   ensureThemeAccess(input, entitlements);
 
   const nextThemePreset =
@@ -327,6 +328,9 @@ export async function updateUserProjectDirectory(
       input.lastLaunchedAt === undefined
         ? existing.lastLaunchedAt
         : input.lastLaunchedAt,
+    archivedByPlan: existing.archivedByPlan,
+    archivedAt: existing.archivedAt,
+    archivedReason: existing.archivedReason,
     updatedAt: nowIso(),
   };
 
@@ -336,6 +340,7 @@ export async function updateUserProjectDirectory(
     project: updatedProject,
     subscription,
     entitlements,
+    archivedProjectCount,
   };
 }
 
@@ -357,5 +362,121 @@ export async function deleteUserProjectDirectory(
 
   return {
     projectId,
+  };
+}
+
+type ReconciledProjectDirectories = {
+  projects: ProjectDirectoryRecord[];
+  archivedProjects: ProjectDirectoryRecord[];
+  allProjects: ProjectDirectoryRecord[];
+  archivedProjectCount: number;
+};
+
+function compareProjectRecency(
+  left: ProjectDirectoryRecord,
+  right: ProjectDirectoryRecord,
+) {
+  const leftRecency = left.lastLaunchedAt ?? left.updatedAt ?? left.createdAt;
+  const rightRecency = right.lastLaunchedAt ?? right.updatedAt ?? right.createdAt;
+
+  if (leftRecency !== rightRecency) {
+    return rightRecency.localeCompare(leftRecency);
+  }
+
+  if (left.updatedAt !== right.updatedAt) {
+    return right.updatedAt.localeCompare(left.updatedAt);
+  }
+
+  return right.createdAt.localeCompare(left.createdAt);
+}
+
+function applyArchiveState(
+  project: ProjectDirectoryRecord,
+  shouldArchive: boolean,
+  timestamp: string,
+  reason: ProjectArchiveReason,
+) {
+  if (shouldArchive) {
+    if (
+      project.archivedByPlan &&
+      project.archivedReason === reason
+    ) {
+      return project;
+    }
+
+    return {
+      ...project,
+      archivedByPlan: true,
+      archivedAt: project.archivedAt ?? timestamp,
+      archivedReason: reason,
+      updatedAt: timestamp,
+    } satisfies ProjectDirectoryRecord;
+  }
+
+  if (!project.archivedByPlan && !project.archivedReason) {
+    return project;
+  }
+
+  return {
+    ...project,
+    archivedByPlan: false,
+    archivedAt: null,
+    archivedReason: null,
+    updatedAt: timestamp,
+  } satisfies ProjectDirectoryRecord;
+}
+
+export async function reconcileProjectDirectoryVisibilityForUser(userId: string) {
+  const subscription = await getEffectiveSubscriptionAccess(userId);
+  const projects = await listProjectDirectoriesForUser(userId);
+
+  return reconcileProjectDirectoryVisibility(
+    projects,
+    subscription.entitlements!.maxProjects,
+  );
+}
+
+export async function reconcileProjectDirectoryVisibility(
+  projects: ProjectDirectoryRecord[],
+  maxProjects: number | null,
+): Promise<ReconciledProjectDirectories> {
+  const timestamp = nowIso();
+  const sortedProjects = [...projects].sort(compareProjectRecency);
+  const allowedIds =
+    maxProjects === null
+      ? new Set(sortedProjects.map((project) => project.id))
+      : new Set(
+          sortedProjects
+            .slice(0, maxProjects)
+            .map((project) => project.id),
+        );
+
+  const reconciled = sortedProjects.map((project) =>
+    applyArchiveState(
+      project,
+      maxProjects !== null && !allowedIds.has(project.id),
+      timestamp,
+      "free_limit",
+    ),
+  );
+
+  const changed = reconciled.filter((project, index) => project !== sortedProjects[index]);
+
+  if (changed.length > 0) {
+    await Promise.all(changed.map((project) => upsertProjectDirectory(project)));
+  }
+
+  const visibleProjects = reconciled
+    .filter((project) => !project.archivedByPlan)
+    .sort(compareProjectRecency);
+  const archivedProjects = reconciled
+    .filter((project) => project.archivedByPlan)
+    .sort(compareProjectRecency);
+
+  return {
+    projects: visibleProjects,
+    archivedProjects,
+    allProjects: reconciled,
+    archivedProjectCount: archivedProjects.length,
   };
 }

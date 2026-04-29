@@ -13,7 +13,7 @@ export default function DesktopLoginPage() {
   const { desktopProtocol } = getOptionalAppConfig();
 
   return (
-    <Suspense fallback={<div className="section-shell py-16 text-muted">Loading desktop sign-in…</div>}>
+    <Suspense fallback={<div className="section-shell py-16 text-muted">Loading desktop sign-in...</div>}>
       <AuthFlowCard desktopProtocol={desktopProtocol} mode="desktop" />
     </Suspense>
   );

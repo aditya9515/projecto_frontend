@@ -3,10 +3,12 @@ import {
   FREE_MAX_CONCURRENT_LAUNCHES,
   getPlanEntitlements,
   normalizeSubscription,
+  normalizeSubscriptionOverride,
+  resolveEffectiveSubscription,
   selectPrimarySubscription,
   withPlanEntitlements,
 } from "@/lib/subscriptions";
-import type { SubscriptionRecord } from "@/lib/types";
+import type { SubscriptionOverrideRecord, SubscriptionRecord } from "@/lib/types";
 
 const subscription = (overrides: Partial<SubscriptionRecord>): SubscriptionRecord => ({
   id: "sub_1",
@@ -23,6 +25,22 @@ const subscription = (overrides: Partial<SubscriptionRecord>): SubscriptionRecor
   cancelAtPeriodEnd: false,
   createdAt: "2026-04-01T00:00:00.000Z",
   updatedAt: "2026-04-10T00:00:00.000Z",
+  ...overrides,
+});
+
+const override = (
+  overrides: Partial<SubscriptionOverrideRecord> = {},
+): SubscriptionOverrideRecord => ({
+  userId: "user_1",
+  plan: "pro",
+  status: "active",
+  billingCycle: "yearly",
+  expiresAt: null,
+  reason: "manual grant",
+  updatedBy: "admin@example.com",
+  updatedAt: "2026-04-24T00:00:00.000Z",
+  createdAt: "2026-04-24T00:00:00.000Z",
+  source: "manual_admin",
   ...overrides,
 });
 
@@ -71,10 +89,10 @@ describe("subscription helpers", () => {
     ).toBe("expired");
   });
 
-  it("limits free users to five default directories that cannot be changed", () => {
+  it("limits free users to five default directories while allowing path changes", () => {
     expect(getPlanEntitlements({ plan: "free", status: "none" })).toEqual({
       maxProjects: FREE_DEFAULT_DIRECTORY_LIMIT,
-      canChangeProjectDirectories: false,
+      canChangeProjectDirectories: true,
       maxConcurrentLaunches: FREE_MAX_CONCURRENT_LAUNCHES,
       canBulkImport: false,
       canBulkScan: false,
@@ -84,7 +102,7 @@ describe("subscription helpers", () => {
       requiresOnline: true,
       projectDetectionLevel: "basic",
       defaultDirectoryLimit: FREE_DEFAULT_DIRECTORY_LIMIT,
-      canChangeDefaultDirectories: false,
+      canChangeDefaultDirectories: true,
     });
   });
 
@@ -110,5 +128,39 @@ describe("subscription helpers", () => {
       defaultDirectoryLimit: null,
       canChangeDefaultDirectories: true,
     });
+  });
+
+  it("treats an active manual override as the effective subscription", () => {
+    const result = resolveEffectiveSubscription(
+      subscription({ plan: "free", status: "expired" }),
+      override({ plan: "pro", status: "active" }),
+      new Date("2026-04-24T00:00:00.000Z"),
+    );
+
+    expect(result.plan).toBe("pro");
+    expect(result.status).toBe("active");
+    expect(result.entitlements?.canBulkImport).toBe(true);
+  });
+
+  it("falls back when a manual override has expired", () => {
+    const result = resolveEffectiveSubscription(
+      subscription({ plan: "free", status: "expired" }),
+      override({
+        expiresAt: "2026-04-01T00:00:00.000Z",
+      }),
+      new Date("2026-04-24T00:00:00.000Z"),
+    );
+
+    expect(result.plan).toBe("free");
+    expect(result.status).toBe("expired");
+  });
+
+  it("normalizes disabled overrides as inactive", () => {
+    expect(
+      normalizeSubscriptionOverride(
+        override({ disabled: true }),
+        new Date("2026-04-24T00:00:00.000Z"),
+      ),
+    ).toBeNull();
   });
 });

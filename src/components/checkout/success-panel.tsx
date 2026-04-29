@@ -67,10 +67,10 @@ export function SuccessPanel() {
   return (
     <div className="section-shell py-16 sm:py-20">
       <Card className="scan-line relative mx-auto max-w-3xl text-center">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full border border-white/12 bg-white/6 text-white">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-full border border-border bg-card-strong text-foreground">
           <CheckCircle2 className="size-8" />
         </div>
-        <h1 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-white">
+        <h1 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground">
           Payment received. projecto is updating your Pro access.
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-strong">
@@ -79,7 +79,7 @@ export function SuccessPanel() {
           into the projecto backend.
         </p>
 
-        <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-black/20 p-6 text-left">
+        <div className="mt-8 rounded-[1.75rem] border border-border bg-card p-6 text-left">
           {loading ? (
             <div className="inline-flex items-center gap-2 text-sm text-muted-strong">
               <LoaderCircle className="size-4 animate-spin" />

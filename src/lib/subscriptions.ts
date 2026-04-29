@@ -3,6 +3,8 @@ import type {
   AppSubscriptionSnapshot,
   BillingCycle,
   DesktopEntitlements,
+  SubscriptionAccessStatus,
+  SubscriptionOverrideRecord,
   SubscriptionRecord,
 } from "@/lib/types";
 
@@ -131,7 +133,7 @@ export function getPlanEntitlements(
     maxProjects: hasProAccess
       ? null
       : FREE_DEFAULT_DIRECTORY_LIMIT,
-    canChangeProjectDirectories: hasProAccess,
+    canChangeProjectDirectories: true,
     maxConcurrentLaunches: hasProAccess
       ? null
       : FREE_MAX_CONCURRENT_LAUNCHES,
@@ -145,7 +147,7 @@ export function getPlanEntitlements(
     defaultDirectoryLimit: hasProAccess
       ? null
       : FREE_DEFAULT_DIRECTORY_LIMIT,
-    canChangeDefaultDirectories: hasProAccess,
+    canChangeDefaultDirectories: true,
   };
 }
 
@@ -156,6 +158,65 @@ export function withPlanEntitlements(
     ...subscription,
     entitlements: getPlanEntitlements(subscription),
   };
+}
+
+function normalizeOverrideStatus(
+  override: SubscriptionOverrideRecord,
+  reference = new Date(),
+): SubscriptionAccessStatus {
+  if (override.disabled) {
+    return "none";
+  }
+
+  if (override.status !== "active") {
+    return override.status;
+  }
+
+  if (!override.expiresAt) {
+    return "active";
+  }
+
+  return toTimestamp(override.expiresAt) > reference.getTime()
+    ? "active"
+    : "expired";
+}
+
+export function normalizeSubscriptionOverride(
+  override: SubscriptionOverrideRecord | null,
+  reference = new Date(),
+): AppSubscriptionSnapshot | null {
+  if (!override) {
+    return null;
+  }
+
+  const status = normalizeOverrideStatus(override, reference);
+
+  if (status === "none") {
+    return null;
+  }
+
+  return {
+    plan: override.plan,
+    status,
+    expiresAt: override.expiresAt ?? undefined,
+    billingCycle: override.billingCycle,
+  };
+}
+
+export function resolveEffectiveSubscription(
+  primarySubscription: SubscriptionRecord | null,
+  override: SubscriptionOverrideRecord | null,
+  reference = new Date(),
+): AppSubscriptionSnapshot {
+  const manualOverride = normalizeSubscriptionOverride(override, reference);
+
+  if (manualOverride?.status === "active") {
+    return withPlanEntitlements(manualOverride);
+  }
+
+  return withPlanEntitlements(
+    normalizeSubscription(primarySubscription, reference),
+  );
 }
 
 export function getPlanLabel(plan: AppPlan) {

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Command, Download, LayoutDashboard, LogOut } from "lucide-react";
+import { Command, Download, LogOut } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { getOptionalAppConfig } from "@/lib/env";
 import { initialsFromName } from "@/lib/utils";
@@ -11,7 +12,6 @@ import { initialsFromName } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Overview" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/account", label: "Account" },
 ];
 
 export function SiteHeader() {
@@ -19,16 +19,16 @@ export function SiteHeader() {
   const { downloadUrl } = getOptionalAppConfig();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/8 bg-black/45 backdrop-blur-2xl">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/78 backdrop-blur-2xl">
       <div className="section-shell flex min-h-20 items-center justify-between gap-4">
         <Link className="flex items-center gap-3" href="/">
-          <span className="flex size-11 items-center justify-center rounded-2xl border border-white/12 bg-white/5 text-white">
+          <span className="flex size-11 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
             <Command className="size-5" />
           </span>
           <div>
-            <div className="text-base font-semibold tracking-tight">projecto</div>
+            <div className="text-base font-semibold tracking-tight text-foreground">Projecto</div>
             <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
-              Local launch control
+              Developer workspace launcher
             </div>
           </div>
         </Link>
@@ -37,7 +37,7 @@ export function SiteHeader() {
           {navItems.map((item) => (
             <Link
               key={item.href}
-              className="transition hover:text-white"
+              className="transition hover:text-foreground"
               href={item.href}
             >
               {item.label}
@@ -46,6 +46,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
+
           <Button
             className="hidden sm:inline-flex"
             href={downloadUrl}
@@ -58,26 +60,20 @@ export function SiteHeader() {
           </Button>
 
           {loading ? (
-            <div className="h-11 w-28 rounded-full border border-white/10 bg-white/4" />
+            <div className="h-11 w-28 rounded-full border border-border bg-card" />
           ) : user ? (
             <div className="flex items-center gap-2">
               <Link
-                className="hidden items-center gap-3 rounded-full border border-white/12 bg-white/5 px-3 py-2 text-sm text-muted-strong transition hover:bg-white/8 md:flex"
+                aria-label="Open account"
+                className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-strong transition hover:bg-card-strong hover:text-foreground"
                 href="/account"
               >
-                <span className="flex size-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white">
+                <span className="flex size-8 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
                   {initialsFromName(user.displayName, user.email)}
                 </span>
-                <span className="max-w-44 truncate">
-                  {user.displayName ?? user.email}
-                </span>
               </Link>
-              <Button href="/account" variant="secondary">
-                <LayoutDashboard className="size-4" />
-                <span className="hidden sm:inline">Account</span>
-              </Button>
               <button
-                className="inline-flex size-11 items-center justify-center rounded-full border border-white/12 bg-white/5 text-muted-strong transition hover:bg-white/8 hover:text-white"
+                className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-strong transition hover:bg-card-strong hover:text-foreground"
                 onClick={() => void signOut()}
                 type="button"
               >

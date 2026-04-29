@@ -19,6 +19,7 @@ export function ContinueInDesktopButton({
   className,
   label = "Continue in Desktop App",
   variant = "primary",
+  requiresActiveSubscription = true,
 }: {
   user: User | null;
   subscription: AppSubscriptionSnapshot | null;
@@ -26,14 +27,18 @@ export function ContinueInDesktopButton({
   className?: string;
   label?: string;
   variant?: "primary" | "secondary" | "ghost";
+  requiresActiveSubscription?: boolean;
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const autoStarted = useRef(false);
+  const canOpenDesktopApp = user != null && (
+    requiresActiveSubscription ? hasDesktopCallbackAccess(subscription) : true
+  );
 
   const openDesktopApp = useCallback(async () => {
-    if (!user || !hasDesktopCallbackAccess(subscription)) {
+    if (!user || !canOpenDesktopApp) {
       return;
     }
 
@@ -69,23 +74,23 @@ export function ContinueInDesktopButton({
     }
 
     setIsLoading(false);
-  }, [subscription, user]);
+  }, [canOpenDesktopApp, user]);
 
   useEffect(() => {
     if (
       !autoStart ||
       autoStarted.current ||
       !user ||
-      !hasDesktopCallbackAccess(subscription)
+      !canOpenDesktopApp
     ) {
       return;
     }
 
     autoStarted.current = true;
     void openDesktopApp();
-  }, [autoStart, openDesktopApp, subscription, user]);
+  }, [autoStart, canOpenDesktopApp, openDesktopApp, user]);
 
-  if (!user || !hasDesktopCallbackAccess(subscription)) {
+  if (!user || !canOpenDesktopApp) {
     return null;
   }
 

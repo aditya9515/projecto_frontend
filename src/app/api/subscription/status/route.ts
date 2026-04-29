@@ -1,28 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
-import { getUserProfile, listSubscriptionsForUser } from "@/lib/firestore";
-import { normalizeSubscription, selectPrimarySubscription, withPlanEntitlements } from "@/lib/subscriptions";
+import { getUserProfile } from "@/lib/firestore";
+import { getProjectDirectoryAccess } from "@/lib/project-directories";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
     const decoded = await requireVerifiedUser(request);
-    const [profile, subscriptions] = await Promise.all([
+    const [profile, access] = await Promise.all([
       getUserProfile(decoded.uid),
-      listSubscriptionsForUser(decoded.uid),
+      getProjectDirectoryAccess(decoded.uid),
     ]);
-
-    const primarySubscription = selectPrimarySubscription(subscriptions);
-    const summary = withPlanEntitlements(
-      normalizeSubscription(primarySubscription),
-    );
 
     return NextResponse.json({
       email: profile?.email ?? decoded.email ?? null,
       providerIds: profile?.providers ?? [decoded.firebase.sign_in_provider],
-      ...summary,
+      ...access.subscription,
+      entitlements: access.entitlements,
+      archivedProjectCount: access.archivedProjectCount,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {

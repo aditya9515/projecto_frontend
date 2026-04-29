@@ -49,9 +49,9 @@ const featureCards: Array<{
     icon: Sparkles,
   },
   {
-    title: "Local-first workflow",
+    title: "Local code, synced control",
     description:
-      "projecto is designed around your machine, your folders, and your existing tooling rather than a remote workspace.",
+      "Projecto keeps source code on your machine while syncing account, billing, and project directory metadata through the hosted backend.",
     icon: Shield,
   },
 ];
@@ -81,7 +81,7 @@ const faqs = [
   {
     question: "Does projecto upload my code?",
     answer:
-      "No. projecto never uploads your source code. It is built around a local-first workflow and keeps your project files on your machine.",
+      "No. Projecto never uploads your source code. It keeps project files on your machine and only syncs account, billing, and project directory metadata.",
   },
   {
     question: "Why does projecto use Google or Apple sign-in?",
@@ -102,7 +102,7 @@ const faqs = [
 
 const trustNotes = [
   "Your code stays on your machine.",
-  "projecto never uploads your source code.",
+  "Projecto never uploads your source code.",
   "Payments and subscriptions are handled securely through Dodo Payments.",
 ];
 
@@ -112,21 +112,21 @@ export function LandingPage() {
   return (
     <div className="pb-24">
       <section className="section-shell section-divider relative overflow-hidden py-18 sm:py-24 lg:py-28">
-        <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.14),_transparent_60%)]" />
+        <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,var(--page-radial-1),transparent_60%)]" />
         <div className="grid gap-14 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)] lg:items-center">
           <div className="max-w-3xl">
             <div className="eyebrow reveal-1">
               <Sparkles className="size-4" />
-              Official projecto website
+              Official Projecto website
             </div>
             <p className="reveal-1 mt-7 font-mono text-xs uppercase tracking-[0.34em] text-muted">
               Open and run any dev project in one click.
             </p>
-            <h1 className="reveal-2 mt-4 text-5xl font-semibold tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
-              Local project startup, reduced to one quiet button.
+            <h1 className="reveal-2 mt-4 text-5xl font-semibold tracking-[-0.04em] text-foreground sm:text-6xl lg:text-7xl">
+              Open and run your dev projects with a calmer desktop workflow.
             </h1>
             <p className="reveal-3 mt-6 max-w-2xl text-lg leading-8 text-muted-strong sm:text-xl">
-              projecto gives developer machines a cleaner control layer: smart
+              Projecto gives developer machines a cleaner control layer: smart
               project folders, launch profiles, editor opening, command execution,
               stack detection, and account-backed billing sync without moving source
               code off your machine.
@@ -142,10 +142,7 @@ export function LandingPage() {
             </div>
             <div className="reveal-3 mt-8 flex flex-wrap gap-3 text-sm text-muted-strong">
               {trustNotes.map((note) => (
-                <div
-                  key={note}
-                  className="rounded-full border border-white/10 bg-white/4 px-4 py-2"
-                >
+                <div key={note} className="rounded-full border border-border bg-card px-4 py-2">
                   {note}
                 </div>
               ))}
@@ -153,25 +150,25 @@ export function LandingPage() {
           </div>
 
           <Card className="drift-slow scan-line relative overflow-hidden">
-            <div className="rounded-[1.5rem] border border-white/10 bg-black/35 p-5">
-              <div className="flex items-center justify-between border-b border-white/10 pb-5">
+            <div className="rounded-[1.5rem] border border-border bg-card p-5">
+              <div className="flex items-center justify-between border-b border-border pb-5">
                 <div>
-                  <div className="font-mono text-[0.7rem] uppercase tracking-[0.3em] text-muted">
+                  <div className="account-label">
                     Active workspace
                   </div>
-                  <div className="mt-3 text-2xl font-semibold text-white">
+                  <div className="mt-3 text-2xl font-semibold text-foreground">
                     projecto-desktop
                   </div>
                 </div>
-                <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs uppercase tracking-[0.22em] text-white">
+                <span className="rounded-full border border-border bg-card-strong px-3 py-1 text-xs uppercase tracking-[0.22em] text-foreground">
                   Ready
                 </span>
               </div>
 
               <div className="mt-5 space-y-4">
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-4">
-                  <div className="flex items-center gap-3 text-sm font-medium text-white">
-                    <FolderKanban className="size-4 text-zinc-100" />
+                <div className="rounded-[1.5rem] border border-border bg-card p-4">
+                  <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+                    <FolderKanban className="size-4 text-foreground" />
                     Smart folder detected
                   </div>
                   <p className="mt-3 text-sm leading-7 text-muted">
@@ -180,31 +177,31 @@ export function LandingPage() {
                   </p>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-4">
-                  <div className="flex items-center gap-3 text-sm font-medium text-white">
-                    <TerminalSquare className="size-4 text-zinc-100" />
+                <div className="rounded-[1.5rem] border border-border bg-card p-4">
+                  <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+                    <TerminalSquare className="size-4 text-foreground" />
                     Launch profile
                   </div>
                   <div className="mt-3 space-y-2 font-mono text-xs text-muted-strong">
-                    <div className="rounded-xl border border-white/8 bg-black/45 px-3 py-2">
+                    <div className="rounded-xl border border-border bg-background/55 px-3 py-2">
                       open Cursor
                     </div>
-                    <div className="rounded-xl border border-white/8 bg-black/45 px-3 py-2">
+                    <div className="rounded-xl border border-border bg-background/55 px-3 py-2">
                       npm run dev:web
                     </div>
-                    <div className="rounded-xl border border-white/8 bg-black/45 px-3 py-2">
+                    <div className="rounded-xl border border-border bg-background/55 px-3 py-2">
                       npm run dev:desktop
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-4">
-                  <div className="flex items-center gap-3 text-sm font-medium text-white">
-                    <Workflow className="size-4 text-zinc-100" />
+                <div className="rounded-[1.5rem] border border-border bg-card-strong p-4">
+                  <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+                    <Workflow className="size-4 text-foreground" />
                     Billing-aware sync
                   </div>
                   <p className="mt-3 text-sm leading-7 text-muted">
-                    Pro access is verified through the projecto billing backend before
+                    Pro access is verified through the Projecto billing backend before
                     premium desktop features unlock.
                   </p>
                 </div>
@@ -217,10 +214,10 @@ export function LandingPage() {
       <section className="section-shell py-12">
         <div className="grid gap-5 md:grid-cols-3">
           <Card className="reveal-1">
-            <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+            <div className="account-label">
               Problem
             </div>
-            <h2 className="mt-4 text-2xl font-semibold text-white">
+            <h2 className="mt-4 text-2xl font-semibold text-foreground">
               Dev environments still start from memory instead of a durable system.
             </h2>
             <p className="mt-4 text-sm leading-7 text-muted">
@@ -230,11 +227,11 @@ export function LandingPage() {
           </Card>
 
           <Card className="reveal-2">
-            <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+            <div className="account-label">
               Solution
             </div>
-            <h2 className="mt-4 text-2xl font-semibold text-white">
-              projecto saves the right startup ritual for every local codebase.
+            <h2 className="mt-4 text-2xl font-semibold text-foreground">
+              Projecto saves the right startup ritual for every local codebase.
             </h2>
             <p className="mt-4 text-sm leading-7 text-muted">
               Keep launch behavior close to your machine, your editors, and your real
@@ -243,14 +240,14 @@ export function LandingPage() {
           </Card>
 
           <Card className="reveal-3">
-            <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+            <div className="account-label">
               Security
             </div>
-            <h2 className="mt-4 text-2xl font-semibold text-white">
+            <h2 className="mt-4 text-2xl font-semibold text-foreground">
               Local-first by default, not as a footnote.
             </h2>
             <p className="mt-4 text-sm leading-7 text-muted">
-              projecto never uploads your source code. Google and Apple sign-in are
+              Projecto never uploads your source code. Google and Apple sign-in are
               used only for account sync, and billing is handled through Dodo
               Payments.
             </p>
@@ -261,7 +258,7 @@ export function LandingPage() {
       <section className="section-shell py-12">
         <div className="max-w-3xl">
           <div className="eyebrow">Features</div>
-          <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+          <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
             A sharper desktop workflow for teams that keep their code local.
           </h2>
         </div>
@@ -273,10 +270,10 @@ export function LandingPage() {
                 key={feature.title}
                 className={index === 0 ? "reveal-1" : index < 3 ? "reveal-2" : "reveal-3"}
               >
-                <div className="flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white">
+                <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
                   <Icon className="size-5" />
                 </div>
-                <h3 className="mt-6 text-xl font-semibold text-white">{feature.title}</h3>
+                <h3 className="mt-6 text-xl font-semibold text-foreground">{feature.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-muted">{feature.description}</p>
               </Card>
             );
@@ -288,11 +285,11 @@ export function LandingPage() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
           <div className="max-w-xl">
             <div className="eyebrow">How It Works</div>
-            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+            <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
               Save once. Launch the same way every time.
             </h2>
             <p className="mt-5 text-base leading-8 text-muted">
-              projecto combines project discovery, editor handoff, and command
+              Projecto combines project discovery, editor handoff, and command
               orchestration into a repeatable workflow that respects local machines.
             </p>
           </div>
@@ -304,12 +301,12 @@ export function LandingPage() {
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+                    <div className="account-label">
                       Step {step.step}
                     </div>
-                    <h3 className="mt-3 text-xl font-semibold text-white">{step.title}</h3>
+                    <h3 className="mt-3 text-xl font-semibold text-foreground">{step.title}</h3>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 font-mono text-xs uppercase tracking-[0.22em] text-muted-strong">
+                  <div className="rounded-full border border-border bg-card px-4 py-2 font-mono text-xs uppercase tracking-[0.22em] text-muted-strong">
                     local workflow
                   </div>
                 </div>
@@ -323,27 +320,27 @@ export function LandingPage() {
       <section className="section-shell py-12">
         <div className="grid gap-5 lg:grid-cols-2">
           <Card className="reveal-1">
-            <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.22em] text-white">
+            <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.22em] text-foreground">
               <Shield className="size-4" />
               Security / Local-first
             </div>
             <ul className="mt-6 space-y-4 text-sm leading-7 text-muted">
               <li className="flex gap-3">
-                <CheckCircle2 className="mt-1 size-4 shrink-0 text-zinc-100" />
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
                 <span>Your code stays on your machine.</span>
               </li>
               <li className="flex gap-3">
-                <CheckCircle2 className="mt-1 size-4 shrink-0 text-zinc-100" />
-                <span>projecto never uploads your source code.</span>
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
+                <span>Projecto never uploads your source code.</span>
               </li>
               <li className="flex gap-3">
-                <CheckCircle2 className="mt-1 size-4 shrink-0 text-zinc-100" />
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
                 <span>
                   Google sign-in is used only for account and subscription sync.
                 </span>
               </li>
               <li className="flex gap-3">
-                <CheckCircle2 className="mt-1 size-4 shrink-0 text-zinc-100" />
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
                 <span>
                   Payments and subscriptions are handled securely through Dodo
                   Payments.
@@ -353,33 +350,33 @@ export function LandingPage() {
           </Card>
 
           <Card className="reveal-2">
-            <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
+            <div className="account-label">
               Pricing preview
             </div>
             <div className="mt-6 grid gap-4">
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
+              <div className="rounded-[1.5rem] border border-border bg-card p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-lg font-semibold text-white">Free</div>
+                    <div className="text-lg font-semibold text-foreground">Free</div>
                     <div className="text-sm text-muted">
-                      Local-only use with lightweight setup limits
+                      Up to 5 projects with basic detection and one launch at a time
                     </div>
                   </div>
-                  <div className="text-2xl font-semibold text-white">$0</div>
+                  <div className="text-2xl font-semibold text-foreground">$0</div>
                 </div>
               </div>
-              <div className="rounded-[1.5rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.03))] p-5">
+              <div className="rounded-[1.5rem] border border-border bg-card-strong p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-lg font-semibold text-white">Pro</div>
+                    <div className="text-lg font-semibold text-foreground">Pro</div>
                     <div className="text-sm text-muted">
-                      Unlimited projects, advanced presets, and future sync support
+                      Unlimited projects, unlimited launches, advanced detection, premium themes, and every new Pro update
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-semibold text-white">$12/mo</div>
-                    <div className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">
-                      or $96 yearly
+                    <div className="text-2xl font-semibold text-foreground">$8/mo</div>
+                    <div className="account-label">
+                      or $80 yearly
                     </div>
                   </div>
                 </div>
@@ -395,8 +392,8 @@ export function LandingPage() {
       <section className="section-shell py-12">
         <div className="max-w-2xl">
           <div className="eyebrow">FAQ</div>
-          <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
-            The questions teams ask before they standardize on projecto.
+          <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
+            The questions teams ask before they standardize on Projecto.
           </h2>
         </div>
         <div className="mt-8 space-y-4">
@@ -405,7 +402,7 @@ export function LandingPage() {
               key={faq.question}
               className={`glass-panel surface-outline rounded-[2rem] p-6 ${index === 0 ? "reveal-1" : index < 3 ? "reveal-2" : "reveal-3"}`}
             >
-              <summary className="cursor-pointer list-none text-lg font-semibold text-white">
+              <summary className="cursor-pointer list-none text-lg font-semibold text-foreground">
                 {faq.question}
               </summary>
               <p className="mt-4 max-w-3xl text-sm leading-7 text-muted">{faq.answer}</p>

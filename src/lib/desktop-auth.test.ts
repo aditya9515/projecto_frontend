@@ -10,7 +10,9 @@ import {
   createDesktopAuthToken,
   createDesktopSession,
   getDesktopAuthToken,
+  getSubscriptionOverride,
   getUserProfile,
+  listProjectDirectoriesForUser,
   listSubscriptionsForUser,
   upsertUserProfile,
 } from "@/lib/firestore";
@@ -34,7 +36,9 @@ vi.mock("@/lib/firestore", () => ({
   createDesktopAuthToken: vi.fn(),
   createDesktopSession: vi.fn(),
   getDesktopAuthToken: vi.fn(),
+  getSubscriptionOverride: vi.fn(),
   getUserProfile: vi.fn(),
+  listProjectDirectoriesForUser: vi.fn(),
   listSubscriptionsForUser: vi.fn(),
   upsertUserProfile: vi.fn(),
 }));
@@ -107,7 +111,9 @@ describe("desktop auth helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getUserProfile).mockResolvedValue(profile());
+    vi.mocked(listProjectDirectoriesForUser).mockResolvedValue([]);
     vi.mocked(listSubscriptionsForUser).mockResolvedValue([activeSubscription()]);
+    vi.mocked(getSubscriptionOverride).mockResolvedValue(null);
     vi.mocked(createDesktopAuthToken).mockResolvedValue(undefined);
     vi.mocked(getDesktopAuthToken).mockResolvedValue(null);
     vi.mocked(consumeDesktopAuthToken).mockResolvedValue(null);
@@ -177,8 +183,8 @@ describe("desktop auth helpers", () => {
       email: decodedToken.email,
       name: "Adi",
     });
-    expect(result.subscription.active).toBe(true);
     expect(result.subscription.plan).toBe("pro");
+    expect(result.subscription.status).toBe("active");
     expect(result.subscription.billingCycle).toBe("monthly");
 
     expect(createDesktopSession).toHaveBeenCalledWith(

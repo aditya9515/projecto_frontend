@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { applyPaymentEventToSubscription, buildSubscriptionRecord } from "@/lib/dodo-subscription";
 import { getDodoEnv } from "@/lib/env";
 import { getSubscriptionById, markWebhookProcessed, upsertSubscription } from "@/lib/firestore";
+import { reconcileProjectDirectoryVisibilityForUser } from "@/lib/project-directories";
 import { unwrapDodoWebhook } from "@/lib/dodo";
 
 export const runtime = "nodejs";
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
         });
 
         await upsertSubscription(record);
+        await reconcileProjectDirectoryVisibilityForUser(record.userId);
         break;
       }
 
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
 
         if (record) {
           await upsertSubscription(record);
+          await reconcileProjectDirectoryVisibilityForUser(record.userId);
         }
         break;
       }

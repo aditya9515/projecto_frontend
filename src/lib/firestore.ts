@@ -4,6 +4,7 @@ import type {
   DesktopSessionRecord,
   ProjectDirectoryRecord,
   SubscriptionRecord,
+  SubscriptionOverrideRecord,
   UserProfileRecord,
 } from "@/lib/types";
 
@@ -12,6 +13,7 @@ const SUBSCRIPTIONS = "subscriptions";
 const DESKTOP_AUTH_TOKENS = "desktopAuthTokens";
 const DESKTOP_SESSIONS = "desktopSessions";
 const PROJECT_DIRECTORIES = "projectDirectories";
+const SUBSCRIPTION_OVERRIDES = "subscriptionOverrides";
 const PROCESSED_WEBHOOKS = "processedWebhooks";
 
 export async function upsertUserProfile(record: UserProfileRecord) {
@@ -47,6 +49,28 @@ export async function upsertSubscription(record: SubscriptionRecord) {
     .collection(SUBSCRIPTIONS)
     .doc(record.dodoSubscriptionId)
     .set(record, { merge: true });
+}
+
+export async function getSubscriptionOverride(userId: string) {
+  const snapshot = await getAdminDb()
+    .collection(SUBSCRIPTION_OVERRIDES)
+    .doc(userId)
+    .get();
+
+  return snapshot.exists
+    ? (snapshot.data() as SubscriptionOverrideRecord)
+    : null;
+}
+
+export async function upsertSubscriptionOverride(record: SubscriptionOverrideRecord) {
+  await getAdminDb()
+    .collection(SUBSCRIPTION_OVERRIDES)
+    .doc(record.userId)
+    .set(record, { merge: true });
+}
+
+export async function deleteSubscriptionOverride(userId: string) {
+  await getAdminDb().collection(SUBSCRIPTION_OVERRIDES).doc(userId).delete();
 }
 
 export async function markWebhookProcessed(webhookId: string, type: string) {

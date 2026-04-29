@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <Suspense fallback={<div className="section-shell py-16 text-muted">Loading pricing…</div>}>
+    <Suspense
+      fallback={
+        <div className="section-shell py-16 text-muted">Loading pricing...</div>
+      }
+    >
       <PricingPageClient />
     </Suspense>
   );

@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="section-shell py-16 text-muted">Loading sign-in…</div>}>
+    <Suspense
+      fallback={
+        <div className="section-shell py-16 text-muted">Loading sign-in...</div>
+      }
+    >
       <AuthFlowCard mode="login" />
     </Suspense>
   );

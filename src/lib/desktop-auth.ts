@@ -7,9 +7,9 @@ import {
   createDesktopSession,
   getDesktopAuthToken,
   getUserProfile,
-  listSubscriptionsForUser,
   upsertUserProfile,
 } from "@/lib/firestore";
+import { getProjectDirectoryAccess } from "@/lib/project-directories";
 import {
   addDays,
   addMinutes,
@@ -19,9 +19,6 @@ import {
   sha256,
 } from "@/lib/security";
 import {
-  normalizeSubscription,
-  selectPrimarySubscription,
-  withPlanEntitlements,
 } from "@/lib/subscriptions";
 import type {
   AppSubscriptionSnapshot,
@@ -58,18 +55,8 @@ type DesktopExchangeResult = {
     email: string;
     name: string;
   };
-  subscription: AppSubscriptionSnapshot & {
-    active: true;
-  };
+  subscription: AppSubscriptionSnapshot;
 };
-
-async function loadDesktopSubscriptionAccess(userId: string) {
-  return withPlanEntitlements(
-    normalizeSubscription(
-      selectPrimarySubscription(await listSubscriptionsForUser(userId)),
-    ),
-  );
-}
 
 async function ensureDesktopAuthUserProfile(decoded: DecodedIdToken) {
   const existing = await getUserProfile(decoded.uid);
@@ -193,9 +180,9 @@ export async function exchangeDesktopCallbackCode(
     );
   }
 
-  const [profile, subscription] = await Promise.all([
+  const [profile, access] = await Promise.all([
     getUserProfile(tokenRecord.userId),
-    loadDesktopSubscriptionAccess(tokenRecord.userId),
+    getProjectDirectoryAccess(tokenRecord.userId),
   ]);
 
   if (!profile?.email) {
@@ -249,8 +236,9 @@ export async function exchangeDesktopCallbackCode(
       name: profile.displayName,
     },
     subscription: {
-      ...subscription,
-      active: true,
+      ...access.subscription,
+      entitlements: access.entitlements,
+      archivedProjectCount: access.archivedProjectCount,
     },
   };
 }

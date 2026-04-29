@@ -4,6 +4,7 @@ import { IBM_Plex_Mono, Manrope } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
+import { DEFAULT_THEME_MODE, THEME_STORAGE_KEY } from "@/lib/theme";
 
 import "./globals.css";
 
@@ -38,6 +39,20 @@ export const metadata: Metadata = {
   },
 };
 
+const themeBootstrapScript = `(() => {
+  try {
+    const storedTheme = window.localStorage.getItem("${THEME_STORAGE_KEY}");
+    const theme = storedTheme === "light" || storedTheme === "dark"
+      ? storedTheme
+      : "${DEFAULT_THEME_MODE}";
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  } catch {
+    document.documentElement.dataset.theme = "${DEFAULT_THEME_MODE}";
+    document.documentElement.style.colorScheme = "${DEFAULT_THEME_MODE}";
+  }
+})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,11 +60,13 @@ export default function RootLayout({
 }>) {
   return (
     <html
+      data-theme={DEFAULT_THEME_MODE}
       lang="en"
       className={`${manrope.variable} ${ibmPlexMono.variable} h-full scroll-smooth`}
       suppressHydrationWarning
     >
       <body className="min-h-full bg-background text-foreground antialiased">
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <Providers>
           <div className="relative isolate flex min-h-screen flex-col overflow-hidden">
             <div className="page-ambient pointer-events-none absolute inset-0 -z-20" />

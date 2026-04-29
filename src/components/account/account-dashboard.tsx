@@ -2,8 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, LoaderCircle, LogOut, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  CreditCard,
+  LoaderCircle,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 
+import { AppearanceSettings } from "@/components/account/appearance-settings";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
@@ -27,6 +34,19 @@ function statusLabel(status: SubscriptionStatusResponse["status"]) {
       return "Cancelled";
     default:
       return "Free";
+  }
+}
+
+function providerLabel(providerId: string) {
+  switch (providerId) {
+    case "google.com":
+      return "Google";
+    case "apple.com":
+      return "Apple";
+    case "password":
+      return "Email";
+    default:
+      return providerId;
   }
 }
 
@@ -116,7 +136,7 @@ export function AccountDashboard() {
         <Card className="mx-auto max-w-3xl">
           <div className="flex items-center gap-3 text-muted-strong">
             <LoaderCircle className="size-5 animate-spin" />
-            Loading your projecto account...
+            Loading your Projecto account...
           </div>
         </Card>
       </div>
@@ -125,121 +145,136 @@ export function AccountDashboard() {
 
   return (
     <div className="section-shell py-16 sm:py-20">
-      <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(300px,0.7fr)]">
-        <Card className="reveal-1">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex size-16 items-center justify-center rounded-[1.5rem] border border-white/10 bg-white/5 text-lg font-semibold text-white">
-                {initialsFromName(user.displayName, user.email)}
-              </div>
-              <div>
-                <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
-                  Account
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="space-y-6 self-start lg:sticky lg:top-28">
+          <Card className="reveal-1 overflow-hidden p-0">
+            <div className="border-b border-border px-6 py-6">
+              <div className="flex items-center gap-4">
+                <div className="flex size-16 items-center justify-center rounded-[1.5rem] border border-border bg-card-strong text-lg font-semibold text-foreground">
+                  {initialsFromName(user.displayName, user.email)}
                 </div>
-                <h1 className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-white">
-                  {user.displayName ?? "projecto user"}
-                </h1>
-                <p className="mt-1 text-sm text-muted">{user.email}</p>
+                <div className="min-w-0">
+                  <div className="account-label">Account</div>
+                  <h1 className="mt-2 truncate text-3xl font-semibold tracking-[-0.03em] text-foreground">
+                    {user.displayName ?? "Projecto user"}
+                  </h1>
+                  <p className="mt-1 truncate text-sm text-muted">{user.email}</p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2">
                 <div
-                  className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.2em] ${
+                  className={`tone-chip ${
                     user.emailVerified
-                      ? "border-white/10 bg-white/6 text-white"
-                      : "border-amber/30 bg-amber/10 text-amber"
+                      ? ""
+                      : "border-amber/35 bg-amber/10 text-amber"
                   }`}
                 >
                   <ShieldCheck className="size-3.5" />
                   {user.emailVerified ? "Verified email" : "Verification pending"}
                 </div>
+                <div className="tone-chip">
+                  <CheckCircle2 className="size-3.5" />
+                  {subscription?.status === "active" ? "Desktop verified" : "Free access"}
+                </div>
               </div>
             </div>
-            <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-muted-strong">
-              Providers:{" "}
-              {user.providerData.map((provider) => provider.providerId).join(", ")}
-            </div>
-          </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
-              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
-                Current plan
+            <div className="space-y-3 px-6 py-5">
+              <div className="account-stat">
+                <div className="account-label">Providers</div>
+                <div className="account-value">
+                  {user.providerData.length > 0
+                    ? user.providerData
+                        .map((provider) => providerLabel(provider.providerId))
+                        .join(", ")
+                    : "Not available"}
+                </div>
               </div>
-              <div className="mt-3 text-3xl font-semibold text-white">
-                {subscription?.plan === "pro" ? "Pro" : "Free"}
+              <div className="account-stat">
+                <div className="account-label">Current plan</div>
+                <div className="account-value">
+                  {subscription?.plan === "pro" ? "Pro" : "Free"}
+                </div>
+              </div>
+              <div className="account-stat">
+                <div className="account-label">Subscription status</div>
+                <div className="account-value">
+                  {statusLabel(subscription?.status ?? "none")}
+                </div>
+              </div>
+              <div className="account-stat">
+                <div className="account-label">Renewal date</div>
+                <div className="account-value">
+                  {formatDateOnly(subscription?.expiresAt)}
+                </div>
+              </div>
+              <div className="account-stat">
+                <div className="account-label">Desktop access</div>
+                <div className="account-value">
+                  {subscription?.status === "active"
+                    ? "Verified for Pro desktop access"
+                    : "Verified for Free desktop access"}
+                </div>
+              </div>
+              <div className="account-stat">
+                <div className="account-label">Hidden projects on Free</div>
+                <div className="account-value">
+                  {subscription?.archivedProjectCount ?? 0}
+                </div>
               </div>
             </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
-              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
-                Subscription status
-              </div>
-              <div className="mt-3 text-3xl font-semibold text-white">
-                {statusLabel(subscription?.status ?? "none")}
-              </div>
-            </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
-              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
-                Renewal date
-              </div>
-              <div className="mt-3 text-lg font-semibold text-white">
-                {formatDateOnly(subscription?.expiresAt)}
-              </div>
-            </div>
-            <div className="rounded-[1.5rem] border border-white/10 bg-white/4 p-5">
-              <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-muted">
-                Access
-              </div>
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-2 text-sm font-semibold text-white">
-                <ShieldCheck className="size-4" />
-                {subscription?.status === "active" ? "Desktop verified" : "Free access"}
-              </div>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </aside>
 
-        <Card className="reveal-2">
-          <div className="font-mono text-[0.72rem] uppercase tracking-[0.28em] text-muted">
-            Billing actions
-          </div>
-          <div className="mt-6 space-y-4">
-            <ContinueInDesktopButton
-              className="w-full"
-              subscription={subscription}
-              user={user}
-              variant="secondary"
-            />
-            <Button
-              className="w-full justify-between"
-              disabled={billingBusy}
-              onClick={() => void openBillingPortal()}
-              type="button"
-              variant="secondary"
-            >
-              <span className="inline-flex items-center gap-2">
-                <CreditCard className="size-4" />
-                Manage billing
-              </span>
-              {billingBusy ? (
-                <LoaderCircle className="size-4 animate-spin" />
-              ) : null}
-            </Button>
+        <div className="space-y-6">
+          <Card className="reveal-2">
+            <div className="account-label">Account tools</div>
+            <div className="mt-4 max-w-2xl text-sm leading-7 text-muted">
+              Projecto uses this account site as the source of truth for your
+              plan, renewal state, hidden-project reconciliation, and secure
+              desktop verification.
+            </div>
+            <div className="mt-6 space-y-4">
+              <ContinueInDesktopButton
+                className="w-full"
+                requiresActiveSubscription={false}
+                subscription={subscription}
+                user={user}
+                variant="secondary"
+              />
+              <Button
+                className="w-full justify-between"
+                disabled={billingBusy}
+                onClick={() => void openBillingPortal()}
+                type="button"
+                variant="secondary"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <CreditCard className="size-4" />
+                  Manage billing
+                </span>
+                {billingBusy ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : null}
+              </Button>
+              <Button
+                className="w-full justify-between"
+                onClick={() => void signOut()}
+                type="button"
+                variant="secondary"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <LogOut className="size-4" />
+                  Log out
+                </span>
+              </Button>
+            </div>
+            {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}
+          </Card>
 
-            <Button
-              className="w-full justify-between"
-              onClick={() => void signOut()}
-              type="button"
-              variant="secondary"
-            >
-              <span className="inline-flex items-center gap-2">
-                <LogOut className="size-4" />
-                Log out
-              </span>
-            </Button>
-          </div>
-          <p className="mt-6 text-sm leading-7 text-muted">
-            The projecto billing backend is the source of truth for your plan,
-            renewal state, and secure desktop subscription checks.
-          </p>
-          {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}
-        </Card>
+          <AppearanceSettings />
+        </div>
       </div>
     </div>
   );
