@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 const windowsInstaller = {
   href: "https://github.com/aditya9515/Projecto/releases/download/v1.0.0/Projecto-1.0.0.Setup.exe",
   fileName: "Projecto-1.0.0.Setup.exe",
-  sha256: "79B7890EDFE9BBA7BD1FE3AB053AE7F6D1DA40DB09F0357898DBA7210EB1ADCC",
+  sha256: "3546AFC09E87922E8805C1C76ADCC3B17C690F9C77DF363DAF4384406A8065BC",
   size: "132.1 MB",
   version: "1.0.0",
 };
