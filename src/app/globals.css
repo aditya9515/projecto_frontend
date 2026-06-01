@@ -52,7 +52,7 @@ body {
 }
 
 body {
-  background: linear-gradient(180deg, var(--page-top) 0%, var(--background) 52%, var(--page-bottom) 100%);
+  background: linear-gradient(180deg, var(--page-top) 0%, var(--background) 72%, var(--page-bottom) 140%);
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
   transition:
