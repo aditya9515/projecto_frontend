@@ -97,6 +97,24 @@ a {
   color: #ffdbbb;
 }
 
+.projecto-icon-surface {
+  background: #664930;
+  border-color: #664930;
+  color: #ffdbbb;
+  box-shadow: 0 4px 0 #997e67;
+}
+
+.projecto-icon-surface svg {
+  color: #ffdbbb;
+}
+
+.projecto-disabled-control {
+  background: #ffdbbb;
+  border-color: #664930;
+  color: #664930;
+  box-shadow: inset 0 0 0 1px #997e67;
+}
+
 .card-hover {
   transition:
     transform 240ms cubic-bezier(0.22, 1, 0.36, 1),

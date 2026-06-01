@@ -149,7 +149,7 @@ export function AccountDashboard() {
           <Card className="reveal-1 overflow-hidden p-0">
             <div className="border-b border-border px-6 py-6">
               <div className="flex items-center gap-4">
-                <div className="flex size-16 items-center justify-center rounded-[1.5rem] border border-border bg-card-strong text-lg font-semibold text-foreground">
+                <div className="projecto-icon-surface flex size-16 items-center justify-center rounded-[1.5rem] border text-lg font-semibold">
                   {initialsFromName(user.displayName, user.email)}
                 </div>
                 <div className="min-w-0">

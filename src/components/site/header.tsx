@@ -21,7 +21,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="section-shell flex min-h-20 items-center justify-between gap-4">
         <Link className="flex items-center gap-3" href="/">
-          <span className="flex size-11 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
+          <span className="projecto-icon-surface flex size-11 items-center justify-center rounded-2xl border">
             <Command className="size-5" />
           </span>
           <div>

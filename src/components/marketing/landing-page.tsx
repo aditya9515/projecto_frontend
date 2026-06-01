@@ -269,7 +269,7 @@ export function LandingPage() {
                 key={feature.title}
                 className={index === 0 ? "reveal-1" : index < 3 ? "reveal-2" : "reveal-3"}
               >
-                <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
+                <div className="projecto-icon-surface flex size-12 items-center justify-center rounded-2xl border">
                   <Icon className="size-5" />
                 </div>
                 <h3 className="mt-6 text-xl font-semibold text-foreground">{feature.title}</h3>

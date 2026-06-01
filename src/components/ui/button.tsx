@@ -38,7 +38,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
       ...linkProps
     } = props as LinkButtonProps;
     const classes = cn(
-      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border disabled:bg-card-strong disabled:text-muted",
+      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border-strong disabled:bg-card disabled:text-foreground",
       buttonStyles[variant],
       className,
     );
@@ -68,7 +68,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     ...buttonProps
   } = props as ButtonProps;
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border disabled:bg-card-strong disabled:text-muted",
+    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border-strong disabled:bg-card disabled:text-foreground",
     buttonStyles[variant],
     className,
   );

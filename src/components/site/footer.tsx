@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="border-t border-border py-10">
       <div className="section-shell flex flex-col gap-6 text-sm text-muted md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-2xl border border-border bg-card text-foreground">
+          <span className="projecto-icon-surface flex size-10 items-center justify-center rounded-2xl border">
             <ShieldCheck className="size-4" />
           </span>
           <div>

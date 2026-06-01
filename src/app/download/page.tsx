@@ -64,7 +64,7 @@ export default function DownloadPage() {
               key={platform.name}
               className={index === 0 ? "reveal-1" : index === 1 ? "reveal-2" : "reveal-3"}
             >
-              <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
+              <div className="projecto-icon-surface flex size-12 items-center justify-center rounded-2xl border">
                 <Icon className="size-5" />
               </div>
               <h2 className="mt-6 text-2xl font-semibold text-foreground">{platform.name}</h2>
@@ -80,7 +80,7 @@ export default function DownloadPage() {
                 </Button>
               ) : (
                 <button
-                  className="mt-8 inline-flex w-full items-center justify-center rounded-full border border-border bg-card-strong px-5 py-3 text-sm font-semibold text-muted"
+                  className="projecto-disabled-control mt-8 inline-flex w-full items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold"
                   disabled
                   type="button"
                 >
