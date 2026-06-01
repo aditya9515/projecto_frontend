@@ -1,24 +1,37 @@
 import type { Metadata } from "next";
-import { Download, LaptopMinimal, Monitor, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Download, LaptopMinimal, Monitor, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
+const windowsInstaller = {
+  href: "https://github.com/aditya9515/Projecto/releases/download/v1.0.0/Projecto-1.0.0.Setup.exe",
+  fileName: "Projecto-1.0.0.Setup.exe",
+  sha256: "79B7890EDFE9BBA7BD1FE3AB053AE7F6D1DA40DB09F0357898DBA7210EB1ADCC",
+  size: "132.1 MB",
+  version: "1.0.0",
+};
+
 const platformCards = [
   {
     name: "Windows",
-    detail: "Installer release path pending",
+    detail: `Projecto ${windowsInstaller.version} for Windows x64.`,
     icon: Monitor,
+    status: "Available now",
+    href: windowsInstaller.href,
+    fileName: windowsInstaller.fileName,
   },
   {
     name: "macOS",
-    detail: "Signed build path pending",
+    detail: "Signed macOS builds will be published after the signing pipeline is ready.",
     icon: LaptopMinimal,
+    status: "Coming soon",
   },
   {
     name: "Linux",
-    detail: "Package path pending",
+    detail: "Linux DEB/RPM packages will be published after cross-platform packaging.",
     icon: Download,
+    status: "Coming soon",
   },
 ];
 
@@ -33,12 +46,12 @@ export default function DownloadPage() {
       <div className="mx-auto max-w-3xl text-center">
         <div className="eyebrow reveal-1 justify-center">Download</div>
         <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
-          projecto desktop rollout.
+          Download Projecto for Windows.
         </h1>
         <p className="reveal-3 mt-5 text-lg leading-8 text-muted-strong">
-          This site is ready for auth, billing, and subscription sync. Installer
-          links can be published here as soon as your desktop release assets are
-          available.
+          Install the Projecto desktop app, sign in with your Projecto account,
+          and launch your local developer workspaces with the mapped terminal
+          workflow.
         </p>
       </div>
 
@@ -56,13 +69,24 @@ export default function DownloadPage() {
               </div>
               <h2 className="mt-6 text-2xl font-semibold text-foreground">{platform.name}</h2>
               <p className="mt-3 text-sm leading-7 text-muted">{platform.detail}</p>
-              <button
-                className="mt-8 inline-flex w-full items-center justify-center rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold text-muted-strong opacity-70"
-                disabled
-                type="button"
-              >
-                Coming soon
-              </button>
+              {platform.href ? (
+                <Button
+                  className="mt-8 w-full"
+                  download={platform.fileName}
+                  href={platform.href}
+                >
+                  <Download className="size-4" />
+                  Download for Windows
+                </Button>
+              ) : (
+                <button
+                  className="mt-8 inline-flex w-full items-center justify-center rounded-full border border-border bg-card-strong px-5 py-3 text-sm font-semibold text-muted"
+                  disabled
+                  type="button"
+                >
+                  {platform.status}
+                </button>
+              )}
             </Card>
           );
         })}
@@ -73,12 +97,28 @@ export default function DownloadPage() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-foreground">
               <ShieldCheck className="size-4" />
-              Ready now
+              Release details
             </div>
-            <p className="mt-4 text-sm leading-7 text-muted">
-              Google and Apple sign-in, billing, subscriptions, and desktop access
-              verification are already live. If you already have the app installed,
-              you can sign in and continue from pricing or account.
+            <ul className="mt-4 grid gap-3 text-sm leading-7 text-muted sm:grid-cols-2">
+              <li className="flex gap-2">
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
+                <span>Version {windowsInstaller.version}</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
+                <span>{windowsInstaller.size} Windows x64 installer</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
+                <span>OS Terminal and Editor Terminal modes</span>
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
+                <span>Account, billing, and desktop verification enabled</span>
+              </li>
+            </ul>
+            <p className="mt-4 break-all font-mono text-xs leading-6 text-muted">
+              SHA-256: {windowsInstaller.sha256}
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">

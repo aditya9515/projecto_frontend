@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 const buttonStyles = {
   primary:
-    "bg-foreground text-background shadow-[0_18px_48px_rgba(0,0,0,0.14)] hover:opacity-92",
+    "projecto-inverse-text border border-foreground bg-foreground hover:bg-muted-strong",
   secondary:
     "border border-border-strong bg-card text-foreground hover:bg-card-strong",
   ghost:
@@ -38,13 +38,15 @@ export function Button(props: ButtonProps | LinkButtonProps) {
       ...linkProps
     } = props as LinkButtonProps;
     const classes = cn(
-      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:opacity-60",
+      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border disabled:bg-card-strong disabled:text-muted",
       buttonStyles[variant],
       className,
     );
     const isExternal = /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(href);
+    const shouldUseAnchor =
+      isExternal || linkProps.download != null || href.startsWith("/downloads/");
 
-    if (isExternal) {
+    if (shouldUseAnchor) {
       return (
         <a className={classes} href={href} {...linkProps}>
           {children}
@@ -66,7 +68,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     ...buttonProps
   } = props as ButtonProps;
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:opacity-60",
+    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border disabled:bg-card-strong disabled:text-muted",
     buttonStyles[variant],
     className,
   );

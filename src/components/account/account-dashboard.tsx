@@ -10,7 +10,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import { AppearanceSettings } from "@/components/account/appearance-settings";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
@@ -273,7 +272,6 @@ export function AccountDashboard() {
             {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}
           </Card>
 
-          <AppearanceSettings />
         </div>
       </div>
     </div>

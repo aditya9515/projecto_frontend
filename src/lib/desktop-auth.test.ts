@@ -53,6 +53,14 @@ const decodedToken = {
   },
 } as unknown as DecodedIdToken;
 
+function isoOffsetDays(days: number): string {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function isoOffsetMinutes(minutes: number): string {
+  return new Date(Date.now() + minutes * 60 * 1000).toISOString();
+}
+
 function activeSubscription(
   overrides: Partial<SubscriptionRecord> = {},
 ): SubscriptionRecord {
@@ -66,11 +74,11 @@ function activeSubscription(
     plan: "pro",
     status: "active",
     billingCycle: "monthly",
-    currentPeriodStart: "2026-04-01T00:00:00.000Z",
-    currentPeriodEnd: "2026-05-01T00:00:00.000Z",
+    currentPeriodStart: isoOffsetDays(-14),
+    currentPeriodEnd: isoOffsetDays(16),
     cancelAtPeriodEnd: false,
-    createdAt: "2026-04-01T00:00:00.000Z",
-    updatedAt: "2026-04-25T00:00:00.000Z",
+    createdAt: isoOffsetDays(-30),
+    updatedAt: isoOffsetDays(-1),
     ...overrides,
   };
 }
@@ -84,8 +92,8 @@ function profile(
     displayName: "Adi",
     photoURL: null,
     providers: ["google.com"],
-    createdAt: "2026-04-01T00:00:00.000Z",
-    updatedAt: "2026-04-25T00:00:00.000Z",
+    createdAt: isoOffsetDays(-30),
+    updatedAt: isoOffsetDays(-1),
     ...overrides,
   };
 }
@@ -100,9 +108,9 @@ function authTokenRecord(
     userId: decodedToken.uid,
     tokenHash: code,
     stateHash: sha256("desktop-state"),
-    expiresAt: "2026-05-01T00:00:00.000Z",
+    expiresAt: isoOffsetMinutes(5),
     used: false,
-    createdAt: "2026-04-25T00:00:00.000Z",
+    createdAt: isoOffsetDays(-1),
     ...overrides,
   };
 }
@@ -146,7 +154,7 @@ describe("desktop auth helpers", () => {
       activeSubscription({
         plan: "free",
         status: "expired",
-        currentPeriodEnd: "2026-04-01T00:00:00.000Z",
+        currentPeriodEnd: isoOffsetDays(-30),
       }),
     ]);
 
@@ -223,7 +231,7 @@ describe("desktop auth helpers", () => {
       authTokenRecord({
         id: sha256("desktop-code"),
         tokenHash: sha256("desktop-code"),
-        expiresAt: "2026-04-01T00:00:00.000Z",
+        expiresAt: isoOffsetMinutes(-5),
       }),
     );
 

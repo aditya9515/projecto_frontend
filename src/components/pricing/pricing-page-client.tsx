@@ -24,7 +24,7 @@ const plans = {
       "basic project detection",
       "1 project launch at a time",
       "bulk import locked",
-      "basic themes",
+      "standard launcher controls",
     ],
   },
   pro: {
@@ -34,14 +34,14 @@ const plans = {
     monthlyLabel: "per month",
     yearlyLabel: "per year",
     description:
-      "Unlimited workspace control with advanced detection, bulk import, premium themes, and every new Pro update.",
+      "Unlimited workspace control with advanced detection, bulk import, and every new Pro update.",
     features: [
       "unlimited project directories",
       "unlimited active launches",
       "advanced project detection",
       "change project directories",
       "bulk import and bulk scan",
-      "premium themes",
+      "priority desktop updates",
       "all new Pro updates",
     ],
   },
@@ -191,7 +191,7 @@ export function PricingPageClient() {
               className={cn(
                 "rounded-full px-5 py-2 text-sm font-semibold transition",
                 billingCycle === cycle
-                  ? "bg-foreground text-background"
+                  ? "projecto-inverse-text bg-foreground"
                   : "text-muted-strong hover:text-foreground",
               )}
               onClick={() => setBillingCycle(cycle)}
