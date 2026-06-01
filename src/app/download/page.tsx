@@ -44,8 +44,7 @@ export default function DownloadPage() {
   return (
     <div className="section-shell py-16 sm:py-20">
       <div className="mx-auto max-w-3xl text-center">
-        <div className="eyebrow reveal-1 justify-center">Download</div>
-        <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
+        <h1 className="reveal-2 text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
           Download Projecto for Windows.
         </h1>
         <p className="reveal-3 mt-5 text-lg leading-8 text-muted-strong">

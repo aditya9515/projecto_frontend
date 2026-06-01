@@ -15,7 +15,7 @@
   --emerald: #997e67;
   --amber: #997e67;
   --danger: #664930;
-  --shadow: 0 10px 0 #ccbeb1;
+  --shadow: none;
   --page-top: #ffdbbb;
   --page-bottom: #ccbeb1;
   --section-line: #997e67;
@@ -77,7 +77,6 @@ a {
 .glass-panel {
   background: var(--card);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
 }
 
 .surface-outline {
@@ -101,7 +100,6 @@ a {
   background: #664930;
   border-color: #664930;
   color: #ffdbbb;
-  box-shadow: 0 4px 0 #997e67;
 }
 
 .projecto-icon-surface svg {
@@ -112,7 +110,6 @@ a {
   background: #ffdbbb;
   border-color: #664930;
   color: #664930;
-  box-shadow: inset 0 0 0 1px #997e67;
 }
 
 .card-hover {
