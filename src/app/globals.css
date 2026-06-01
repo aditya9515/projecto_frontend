@@ -2,26 +2,26 @@
 
 :root {
   color-scheme: light;
-  --background: #edede9;
-  --foreground: #2d211b;
-  --muted: #756459;
-  --muted-strong: #4d3e36;
-  --card: #f5ebe0;
-  --card-strong: #e3d5ca;
-  --border: #d5bdaf;
-  --border-strong: #b89f8f;
-  --brand: #d6ccc2;
-  --brand-strong: #d5bdaf;
-  --emerald: #6e745f;
-  --amber: #8b6f4a;
-  --danger: #8a3a32;
-  --shadow: 0 10px 0 #d6ccc2;
-  --page-top: #f5ebe0;
-  --page-bottom: #d6ccc2;
-  --section-line: #d5bdaf;
-  --hover-border: #a88f80;
-  --selection-bg: #d5bdaf;
-  --selection-foreground: #2d211b;
+  --background: #ffdbbb;
+  --foreground: #664930;
+  --muted: #997e67;
+  --muted-strong: #664930;
+  --card: #ffdbbb;
+  --card-strong: #ccbeb1;
+  --border: #997e67;
+  --border-strong: #664930;
+  --brand: #ccbeb1;
+  --brand-strong: #997e67;
+  --emerald: #997e67;
+  --amber: #997e67;
+  --danger: #664930;
+  --shadow: 0 10px 0 #ccbeb1;
+  --page-top: #ffdbbb;
+  --page-bottom: #ccbeb1;
+  --section-line: #997e67;
+  --hover-border: #664930;
+  --selection-bg: #ccbeb1;
+  --selection-foreground: #664930;
 }
 
 @theme inline {
@@ -90,11 +90,11 @@ a {
 }
 
 .projecto-inverse-text {
-  color: #edede9;
+  color: #ffdbbb;
 }
 
 .projecto-inverse-text svg {
-  color: #edede9;
+  color: #ffdbbb;
 }
 
 .card-hover {
