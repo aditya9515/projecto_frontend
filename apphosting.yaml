@@ -24,7 +24,7 @@ env:
       - RUNTIME
 
   - variable: NEXT_PUBLIC_APP_DOWNLOAD_URL
-    value: https://projecto.adityakosuru.online/download
+    value: https://github.com/aditya9515/Projecto/releases/download/v1.0.0/Projecto-1.0.0.Setup.exe
     availability:
       - BUILD
       - RUNTIME
