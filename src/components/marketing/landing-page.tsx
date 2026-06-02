@@ -112,7 +112,6 @@ export function LandingPage() {
   return (
     <div className="pb-24">
       <section className="section-shell section-divider relative overflow-hidden py-18 sm:py-24 lg:py-28">
-        <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,var(--page-radial-1),transparent_60%)]" />
         <div className="grid gap-14 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)] lg:items-center">
           <div className="max-w-3xl">
             <div className="eyebrow reveal-1">
@@ -183,13 +182,13 @@ export function LandingPage() {
                     Launch profile
                   </div>
                   <div className="mt-3 space-y-2 font-mono text-xs text-muted-strong">
-                    <div className="rounded-xl border border-border bg-background/55 px-3 py-2">
+                    <div className="rounded-xl border border-border bg-background px-3 py-2">
                       open Cursor
                     </div>
-                    <div className="rounded-xl border border-border bg-background/55 px-3 py-2">
+                    <div className="rounded-xl border border-border bg-background px-3 py-2">
                       npm run dev:web
                     </div>
-                    <div className="rounded-xl border border-border bg-background/55 px-3 py-2">
+                    <div className="rounded-xl border border-border bg-background px-3 py-2">
                       npm run dev:desktop
                     </div>
                   </div>
@@ -270,7 +269,7 @@ export function LandingPage() {
                 key={feature.title}
                 className={index === 0 ? "reveal-1" : index < 3 ? "reveal-2" : "reveal-3"}
               >
-                <div className="flex size-12 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
+                <div className="projecto-icon-surface flex size-12 items-center justify-center rounded-2xl border">
                   <Icon className="size-5" />
                 </div>
                 <h3 className="mt-6 text-xl font-semibold text-foreground">{feature.title}</h3>
@@ -370,7 +369,7 @@ export function LandingPage() {
                   <div>
                     <div className="text-lg font-semibold text-foreground">Pro</div>
                     <div className="text-sm text-muted">
-                      Unlimited projects, unlimited launches, advanced detection, premium themes, and every new Pro update
+                      Unlimited projects, unlimited launches, advanced detection, bulk import, and every new Pro update
                     </div>
                   </div>
                   <div className="text-right">

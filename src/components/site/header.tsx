@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Command, Download, LogOut } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
-import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { getOptionalAppConfig } from "@/lib/env";
 import { initialsFromName } from "@/lib/utils";
@@ -19,10 +18,10 @@ export function SiteHeader() {
   const { downloadUrl } = getOptionalAppConfig();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/78 backdrop-blur-2xl">
+    <header className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="section-shell flex min-h-20 items-center justify-between gap-4">
         <Link className="flex items-center gap-3" href="/">
-          <span className="flex size-11 items-center justify-center rounded-2xl border border-border bg-card-strong text-foreground">
+          <span className="projecto-icon-surface flex size-11 items-center justify-center rounded-2xl border">
             <Command className="size-5" />
           </span>
           <div>
@@ -46,8 +45,6 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <ThemeToggle />
-
           <Button
             className="hidden sm:inline-flex"
             href={downloadUrl}
@@ -68,7 +65,7 @@ export function SiteHeader() {
                 className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-strong transition hover:bg-card-strong hover:text-foreground"
                 href="/account"
               >
-                <span className="flex size-8 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
+                <span className="projecto-inverse-text flex size-8 items-center justify-center rounded-full bg-foreground text-xs font-semibold">
                   {initialsFromName(user.displayName, user.email)}
                 </span>
               </Link>

@@ -1,10 +1,12 @@
 import { getAdminDb } from "@/lib/firebase/admin";
 import type {
   DesktopAuthTokenRecord,
+  DesktopSessionPublicRecord,
   DesktopSessionRecord,
   ProjectDirectoryRecord,
   SubscriptionRecord,
   SubscriptionOverrideRecord,
+  SubscriptionAuditRecord,
   UserProfileRecord,
 } from "@/lib/types";
 
@@ -15,6 +17,7 @@ const DESKTOP_SESSIONS = "desktopSessions";
 const PROJECT_DIRECTORIES = "projectDirectories";
 const SUBSCRIPTION_OVERRIDES = "subscriptionOverrides";
 const PROCESSED_WEBHOOKS = "processedWebhooks";
+const SUBSCRIPTION_AUDIT_LOGS = "subscriptionAuditLogs";
 
 export async function upsertUserProfile(record: UserProfileRecord) {
   const db = getAdminDb();
@@ -162,6 +165,73 @@ export async function touchDesktopSession(id: string) {
     },
     { merge: true },
   );
+}
+
+export async function listDesktopSessionsForUser(userId: string) {
+  const snapshot = await getAdminDb()
+    .collection(DESKTOP_SESSIONS)
+    .where("userId", "==", userId)
+    .get();
+
+  return snapshot.docs
+    .map((doc) => doc.data() as DesktopSessionRecord)
+    .sort((left, right) => right.lastSeenAt.localeCompare(left.lastSeenAt));
+}
+
+export async function revokeDesktopSessionForUser(
+  userId: string,
+  sessionId: string,
+) {
+  const session = await getDesktopSession(sessionId);
+
+  if (!session || session.userId !== userId) {
+    return null;
+  }
+
+  const revokedAt = new Date().toISOString();
+  await getAdminDb().collection(DESKTOP_SESSIONS).doc(sessionId).set(
+    {
+      revoked: true,
+      revokedAt,
+      lastSeenAt: revokedAt,
+    },
+    { merge: true },
+  );
+
+  return {
+    ...session,
+    revoked: true,
+    revokedAt,
+    lastSeenAt: revokedAt,
+  } satisfies DesktopSessionRecord;
+}
+
+export function toPublicDesktopSession(
+  session: DesktopSessionRecord,
+  currentSessionId?: string,
+): DesktopSessionPublicRecord {
+  return {
+    id: session.id,
+    deviceId: session.deviceId,
+    deviceName: session.deviceName,
+    platform: session.platform,
+    createdAt: session.createdAt,
+    lastSeenAt: session.lastSeenAt,
+    expiresAt: session.expiresAt,
+    revoked: session.revoked,
+    current: currentSessionId ? session.id === currentSessionId : undefined,
+  };
+}
+
+export async function appendSubscriptionAuditLog(
+  record: Omit<SubscriptionAuditRecord, "id" | "createdAt">,
+) {
+  const reference = getAdminDb().collection(SUBSCRIPTION_AUDIT_LOGS).doc();
+  await reference.set({
+    ...record,
+    id: reference.id,
+    createdAt: new Date().toISOString(),
+  } satisfies SubscriptionAuditRecord);
 }
 
 export async function listProjectDirectoriesForUser(userId: string) {

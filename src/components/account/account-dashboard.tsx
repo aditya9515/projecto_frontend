@@ -7,16 +7,17 @@ import {
   CreditCard,
   LoaderCircle,
   LogOut,
+  Monitor,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 
-import { AppearanceSettings } from "@/components/account/appearance-settings";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { authorizedFetch } from "@/lib/client-api";
-import type { AppSubscriptionSnapshot } from "@/lib/types";
+import type { AppSubscriptionSnapshot, DesktopSessionPublicRecord } from "@/lib/types";
 import { formatDateOnly, initialsFromName } from "@/lib/utils";
 
 interface SubscriptionStatusResponse extends AppSubscriptionSnapshot {
@@ -57,6 +58,8 @@ export function AccountDashboard() {
     useState<SubscriptionStatusResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
+  const [sessions, setSessions] = useState<DesktopSessionPublicRecord[]>([]);
+  const [sessionBusyId, setSessionBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -101,6 +104,44 @@ export function AccountDashboard() {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    let active = true;
+
+    void (async () => {
+      try {
+        const response = await authorizedFetch(user, "/api/account/desktop-sessions");
+        const payload = (await response.json()) as {
+          sessions?: DesktopSessionPublicRecord[];
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error ?? "Unable to load desktop devices.");
+        }
+
+        if (active) {
+          setSessions(payload.sessions ?? []);
+        }
+      } catch (deviceError) {
+        if (active) {
+          setError(
+            deviceError instanceof Error
+              ? deviceError.message
+              : "Unable to load desktop devices.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
   async function openBillingPortal() {
     if (!user) {
       return;
@@ -130,6 +171,47 @@ export function AccountDashboard() {
     }
   }
 
+  async function revokeDesktopSession(sessionId: string) {
+    if (!user) {
+      return;
+    }
+
+    setSessionBusyId(sessionId);
+    setError(null);
+
+    try {
+      const response = await authorizedFetch(user, "/api/account/desktop-sessions/revoke", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+      const payload = (await response.json()) as {
+        session?: DesktopSessionPublicRecord;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.session) {
+        throw new Error(payload.error ?? "Unable to revoke desktop session.");
+      }
+
+      setSessions((current) =>
+        current.map((session) =>
+          session.id === sessionId ? payload.session! : session,
+        ),
+      );
+    } catch (revokeError) {
+      setError(
+        revokeError instanceof Error
+          ? revokeError.message
+          : "Unable to revoke desktop session.",
+      );
+    } finally {
+      setSessionBusyId(null);
+    }
+  }
+
   if (loading || !user) {
     return (
       <div className="section-shell py-16 sm:py-20">
@@ -150,7 +232,7 @@ export function AccountDashboard() {
           <Card className="reveal-1 overflow-hidden p-0">
             <div className="border-b border-border px-6 py-6">
               <div className="flex items-center gap-4">
-                <div className="flex size-16 items-center justify-center rounded-[1.5rem] border border-border bg-card-strong text-lg font-semibold text-foreground">
+                <div className="projecto-icon-surface flex size-16 items-center justify-center rounded-[1.5rem] border text-lg font-semibold">
                   {initialsFromName(user.displayName, user.email)}
                 </div>
                 <div className="min-w-0">
@@ -167,7 +249,7 @@ export function AccountDashboard() {
                   className={`tone-chip ${
                     user.emailVerified
                       ? ""
-                      : "border-amber/35 bg-amber/10 text-amber"
+                      : "border-amber bg-card-strong text-amber"
                   }`}
                 >
                   <ShieldCheck className="size-3.5" />
@@ -273,7 +355,57 @@ export function AccountDashboard() {
             {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}
           </Card>
 
-          <AppearanceSettings />
+          <Card className="reveal-3">
+            <div className="account-label">Desktop devices</div>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-foreground">
+              Signed-in Projecto desktop sessions
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
+              Revoke access for devices you no longer use. Revoked desktop apps
+              must sign in again through the secure browser callback flow.
+            </p>
+            <div className="mt-6 space-y-3">
+              {sessions.length > 0 ? (
+                sessions.map((session) => (
+                  <div
+                    className="flex flex-col gap-4 rounded-[1.5rem] border border-border bg-card-strong p-4 sm:flex-row sm:items-center sm:justify-between"
+                    key={session.id}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-background text-foreground">
+                        <Monitor className="size-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-foreground">
+                          {session.deviceName}
+                        </div>
+                        <div className="mt-1 text-xs text-muted">
+                          {session.platform} · Last seen {formatDateOnly(session.lastSeenAt)}
+                          {session.revoked ? " · Revoked" : ""}
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      disabled={session.revoked || sessionBusyId === session.id}
+                      onClick={() => void revokeDesktopSession(session.id)}
+                      type="button"
+                      variant="secondary"
+                    >
+                      <Trash2 className="size-4" />
+                      {session.revoked ? "Revoked" : "Revoke"}
+                      {sessionBusyId === session.id ? (
+                        <LoaderCircle className="size-4 animate-spin" />
+                      ) : null}
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[1.5rem] border border-dashed border-border px-5 py-6 text-sm text-muted">
+                  No desktop sessions have been created yet.
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
     </div>

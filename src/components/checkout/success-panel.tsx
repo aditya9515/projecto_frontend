@@ -67,7 +67,7 @@ export function SuccessPanel() {
   return (
     <div className="section-shell py-16 sm:py-20">
       <Card className="scan-line relative mx-auto max-w-3xl text-center">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full border border-border bg-card-strong text-foreground">
+        <div className="projecto-icon-surface mx-auto flex size-16 items-center justify-center rounded-full border">
           <CheckCircle2 className="size-8" />
         </div>
         <h1 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground">

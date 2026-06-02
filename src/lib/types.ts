@@ -56,6 +56,28 @@ export interface DesktopSessionRecord {
   lastSeenAt: string;
   expiresAt: string;
   revoked: boolean;
+  revokedAt?: string | null;
+}
+
+export interface DesktopSessionPublicRecord {
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  platform: DesktopPlatform;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  revoked: boolean;
+  current?: boolean;
+}
+
+export interface SubscriptionAuditRecord {
+  id: string;
+  userId: string;
+  type: string;
+  message: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SubscriptionOverrideRecord {

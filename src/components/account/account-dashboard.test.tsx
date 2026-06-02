@@ -1,8 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 
 import { AccountDashboard } from "@/components/account/account-dashboard";
-import { ThemeProvider } from "@/components/theme-provider";
-import { THEME_STORAGE_KEY } from "@/lib/theme";
 
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
@@ -55,28 +53,20 @@ describe("AccountDashboard", () => {
     });
   });
 
-  it("renders the account rail and reflects the saved theme choice", async () => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, "light");
-
-    render(
-      <ThemeProvider>
-        <AccountDashboard />
-      </ThemeProvider>,
-    );
+  it("renders the account rail and desktop session panel", async () => {
+    render(<AccountDashboard />);
 
     expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
     expect(screen.getByText("ada@projecto.dev")).toBeInTheDocument();
     expect(screen.getByText("Providers")).toBeInTheDocument();
     expect(screen.getByText("Current plan")).toBeInTheDocument();
-    expect(screen.getByText("Appearance")).toBeInTheDocument();
-
-    const lightButton = screen.getByRole("button", { name: /Light/i });
-    const darkButton = screen.getByRole("button", { name: /Dark/i });
 
     await waitFor(() => {
-      expect(lightButton).toHaveAttribute("aria-pressed", "true");
-      expect(darkButton).toHaveAttribute("aria-pressed", "false");
-      expect(document.documentElement.dataset.theme).toBe("light");
+      expect(screen.getByText("Desktop devices")).toBeInTheDocument();
+      expect(mocks.authorizedFetch).toHaveBeenCalledWith(
+        expect.anything(),
+        "/api/account/desktop-sessions",
+      );
     });
   });
 });
