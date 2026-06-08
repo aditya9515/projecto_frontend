@@ -323,33 +323,34 @@ export function AccountDashboard() {
                 requiresActiveSubscription={false}
                 subscription={subscription}
                 user={user}
-                variant="secondary"
               />
               <Button
-                className="w-full justify-between"
+                className="w-full"
                 disabled={billingBusy}
                 onClick={() => void openBillingPortal()}
                 type="button"
                 variant="secondary"
               >
-                <span className="inline-flex items-center gap-2">
-                  <CreditCard className="size-4" />
-                  Manage billing
-                </span>
                 {billingBusy ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : null}
+                  <>
+                    <LoaderCircle className="size-4 animate-spin" />
+                    Opening billing
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="size-4" />
+                    Manage billing
+                  </>
+                )}
               </Button>
               <Button
-                className="w-full justify-between"
+                className="w-full"
                 onClick={() => void signOut()}
                 type="button"
                 variant="secondary"
               >
-                <span className="inline-flex items-center gap-2">
-                  <LogOut className="size-4" />
-                  Log out
-                </span>
+                <LogOut className="size-4" />
+                Log out
               </Button>
             </div>
             {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}
