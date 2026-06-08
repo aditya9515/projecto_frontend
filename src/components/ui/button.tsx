@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 
 const buttonStyles = {
   primary:
-    "projecto-inverse-text border border-foreground bg-foreground hover:bg-muted-strong",
+    "projecto-inverse-text border border-emerald bg-foreground shadow-[0_14px_32px_rgba(82,171,152,0.16)] hover:bg-muted-strong hover:shadow-[0_20px_40px_rgba(82,171,152,0.22)]",
   secondary:
-    "border border-border-strong bg-card text-foreground hover:bg-card-strong",
+    "border border-border bg-card text-foreground hover:border-border-strong hover:bg-card-strong",
   ghost:
     "text-muted-strong hover:bg-card hover:text-foreground",
 };

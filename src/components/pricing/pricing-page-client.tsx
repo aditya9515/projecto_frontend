@@ -191,8 +191,8 @@ export function PricingPageClient() {
               className={cn(
                 "rounded-full px-5 py-2 text-sm font-semibold transition",
                 billingCycle === cycle
-                  ? "projecto-inverse-text bg-foreground"
-                  : "text-muted-strong hover:text-foreground",
+                  ? "projecto-inverse-text border border-emerald bg-foreground shadow-[0_12px_28px_rgba(82,171,152,0.18)]"
+                  : "border border-transparent text-muted-strong hover:border-border hover:text-foreground",
               )}
               onClick={() => setBillingCycle(cycle)}
               type="button"
