@@ -9,7 +9,7 @@ import type {
 } from "@/lib/types";
 
 const endOfTermStatuses = new Set(["cancelled", "failed", "on_hold"]);
-const activeStatuses = new Set(["active", "pending"]);
+const activeStatuses = new Set(["active"]);
 export const FREE_DEFAULT_DIRECTORY_LIMIT = 5;
 export const FREE_MAX_CONCURRENT_LAUNCHES = 1;
 

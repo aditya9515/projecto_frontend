@@ -4,6 +4,11 @@ import type { Subscription } from "dodopayments/resources/subscriptions";
 import { resolveBillingCycle, resolvePlanFromProduct } from "@/lib/subscriptions";
 import type { SubscriptionRecord } from "@/lib/types";
 
+type DunningEventData = {
+  status: "recovering" | "recovered" | "exhausted";
+  trigger_state: "on_hold" | "cancelled";
+};
+
 export function buildSubscriptionRecord(input: {
   subscription: Subscription;
   monthlyProductId: string;
@@ -62,6 +67,26 @@ export function applyPaymentEventToSubscription(
       payment.status === "failed"
         ? "failed"
         : existing.status,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function applyDunningEventToSubscription(
+  existing: SubscriptionRecord | null,
+  dunning: DunningEventData,
+): SubscriptionRecord | null {
+  if (!existing) {
+    return null;
+  }
+
+  const status =
+    dunning.status === "recovered"
+      ? "active"
+      : dunning.trigger_state;
+
+  return {
+    ...existing,
+    status,
     updatedAt: new Date().toISOString(),
   };
 }

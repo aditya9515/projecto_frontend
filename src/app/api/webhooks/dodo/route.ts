@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { applyPaymentEventToSubscription, buildSubscriptionRecord } from "@/lib/dodo-subscription";
+import {
+  applyDunningEventToSubscription,
+  applyPaymentEventToSubscription,
+  buildSubscriptionRecord,
+} from "@/lib/dodo-subscription";
 import { getDodoEnv } from "@/lib/env";
 import { getSubscriptionById, markWebhookProcessed, upsertSubscription } from "@/lib/firestore";
 import { reconcileProjectDirectoryVisibilityForUser } from "@/lib/project-directories";
@@ -25,7 +29,8 @@ export async function POST(request: NextRequest) {
       case "subscription.failed":
       case "subscription.on_hold":
       case "subscription.plan_changed":
-      case "subscription.renewed": {
+      case "subscription.renewed":
+      case "subscription.updated": {
         const existing = await getSubscriptionById(event.data.subscription_id);
         const record = buildSubscriptionRecord({
           subscription: event.data,
@@ -36,6 +41,18 @@ export async function POST(request: NextRequest) {
 
         await upsertSubscription(record);
         await reconcileProjectDirectoryVisibilityForUser(record.userId);
+        break;
+      }
+
+      case "dunning.started":
+      case "dunning.recovered": {
+        const existing = await getSubscriptionById(event.data.subscription_id);
+        const record = applyDunningEventToSubscription(existing, event.data);
+
+        if (record) {
+          await upsertSubscription(record);
+          await reconcileProjectDirectoryVisibilityForUser(record.userId);
+        }
         break;
       }
 

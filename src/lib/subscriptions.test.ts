@@ -63,6 +63,16 @@ describe("subscription helpers", () => {
     ).toBe("active");
   });
 
+  it("does not unlock Pro while a subscription is still pending", () => {
+    const result = normalizeSubscription(
+      subscription({ status: "pending" }),
+      new Date("2026-04-24T00:00:00.000Z"),
+    );
+
+    expect(result.plan).toBe("free");
+    expect(result.status).toBe("none");
+  });
+
   it("keeps cancelled subscriptions active until the period ends", () => {
     expect(
       normalizeSubscription(
