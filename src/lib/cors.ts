@@ -23,7 +23,7 @@ export function resolveDesktopAllowedOrigin(
 export function buildDesktopCorsHeaders(origin: string | null) {
   const headers = new Headers({
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     Vary: "Origin",
   });
 
