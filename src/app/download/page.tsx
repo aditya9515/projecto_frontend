@@ -11,37 +11,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-const windowsInstaller = {
-  href: "https://github.com/aditya9515/Projecto/releases/download/v1.0.0/Projecto-1.0.0.Setup.exe",
-  fileName: "Projecto-1.0.0.Setup.exe",
-  sha256: "23C6E7C8C33415D10B4510919E3114FEF020FBC35EA033E3FD762C5DA6F448DF",
-  size: "139.4 MB",
-  version: "1.0.0",
-};
-
-const platformCards = [
-  {
-    name: "Windows",
-    detail: `Projecto ${windowsInstaller.version} for Windows x64.`,
-    icon: Monitor,
-    status: "Available now",
-    href: windowsInstaller.href,
-    fileName: windowsInstaller.fileName,
-  },
-  {
-    name: "macOS",
-    detail: "Signed macOS builds will be published after the signing pipeline is ready.",
-    icon: LaptopMinimal,
-    status: "Coming soon",
-  },
-  {
-    name: "Linux",
-    detail: "Linux DEB/RPM packages will be published after cross-platform packaging.",
-    icon: Download,
-    status: "Coming soon",
-  },
-];
+import { getWindowsInstallerMetadata } from "@/lib/desktop-update";
 
 export const metadata: Metadata = {
   title: "Download",
@@ -49,6 +19,31 @@ export const metadata: Metadata = {
 };
 
 export default function DownloadPage() {
+  const windowsInstaller = getWindowsInstallerMetadata();
+  const platformCards = [
+    {
+      name: "Windows",
+      detail: `Projecto ${windowsInstaller.version} for Windows x64.`,
+      icon: Monitor,
+      status: "Available now",
+      href: windowsInstaller.href,
+      fileName: windowsInstaller.fileName,
+    },
+    {
+      name: "macOS",
+      detail:
+        "Signed macOS builds will be published after the signing pipeline is ready.",
+      icon: LaptopMinimal,
+      status: "Coming soon",
+    },
+    {
+      name: "Linux",
+      detail: "Linux DEB/RPM packages will be published after cross-platform packaging.",
+      icon: Download,
+      status: "Coming soon",
+    },
+  ];
+
   return (
     <div className="section-shell py-16 sm:py-20">
       <div className="mx-auto max-w-3xl text-center">
