@@ -1,9 +1,9 @@
-const DEFAULT_DESKTOP_VERSION = "1.0.2";
+const DEFAULT_DESKTOP_VERSION = "1.0.3";
 const DEFAULT_WINDOWS_INSTALLER_SHA256 =
-  "B640141563731E0EE080D806E593FDD165068EAD3E0A2F125E20957A3ADF9442";
-const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.5 MB";
+  "60E1B3567EB9B4026DABE814E6930B7FF78CF8C258FEFE6F4BE12813295EF980";
+const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.4 MB";
 const DEFAULT_RELEASE_NOTES =
-  "Projecto desktop update with launcher, terminal, billing, and workspace reliability improvements.";
+  "Projecto 1.0.3 fixes mapped OS terminal Stop behavior and improves local launch cleanup reliability.";
 
 export type DesktopUpdateManifest = {
   appName: "Projecto";
