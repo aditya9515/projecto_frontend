@@ -11,6 +11,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DemoVideoSection } from "@/components/marketing/demo-video-section";
 import { getOptionalAppConfig } from "@/lib/env";
 
 const featureCards: Array<{
@@ -209,6 +210,8 @@ export function LandingPage() {
           </Card>
         </div>
       </section>
+
+      <DemoVideoSection />
 
       <section className="section-shell py-12">
         <div className="grid gap-5 md:grid-cols-3">

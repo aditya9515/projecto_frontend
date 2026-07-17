@@ -11,6 +11,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DemoVideoSection } from "@/components/marketing/demo-video-section";
 import { getWindowsInstallerMetadata } from "@/lib/desktop-update";
 
 export const metadata: Metadata = {
@@ -86,8 +87,8 @@ export default function DownloadPage() {
                   Projecto {windowsInstaller.version}
                 </h2>
                 <p className="mt-3 max-w-xl text-sm leading-7 text-muted">
-                  Desktop launcher with OS Terminal, VS Code Terminal, mapped
-                  project sessions, run logs, account sync, and subscription
+                  Desktop launcher with visible OS Terminal sessions, mapped
+                  project runs, run logs, account sync, and subscription
                   checks.
                 </p>
               </div>
@@ -162,6 +163,8 @@ export default function DownloadPage() {
         </div>
       </section>
 
+      <DemoVideoSection />
+
       <div className="mx-auto mt-8 grid max-w-5xl gap-5 md:grid-cols-3">
         {platformCards.map((platform, index) => {
           const Icon = platform.icon;
@@ -217,7 +220,7 @@ export default function DownloadPage() {
               </li>
               <li className="flex gap-2">
                 <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
-                <span>OS Terminal and VS Code Terminal modes</span>
+                <span>Visible OS Terminal launch flow</span>
               </li>
               <li className="flex gap-2">
                 <CheckCircle2 className="mt-1 size-4 shrink-0 text-foreground" />
