@@ -29,8 +29,8 @@ describe("desktop update metadata", () => {
   });
 
   it("marks newer Windows x64 releases as available", () => {
-    process.env.PROJECTO_DESKTOP_LATEST_VERSION = "1.0.1";
-    process.env.PROJECTO_DESKTOP_RELEASE_TAG = "v1.0.1";
+    process.env.PROJECTO_DESKTOP_LATEST_VERSION = "1.0.2";
+    process.env.PROJECTO_DESKTOP_RELEASE_TAG = "v1.0.2";
     process.env.PROJECTO_DESKTOP_SETUP_SHA256 = "abc123";
 
     const manifest = buildDesktopUpdateManifest({
@@ -40,15 +40,15 @@ describe("desktop update metadata", () => {
     });
 
     expect(manifest.updateAvailable).toBe(true);
-    expect(manifest.latestVersion).toBe("1.0.1");
+    expect(manifest.latestVersion).toBe("1.0.2");
     expect(manifest.feedUrl).toBe(
-      "https://github.com/aditya9515/Projecto/releases/download/v1.0.1",
+      "https://github.com/aditya9515/Projecto/releases/download/v1.0.2",
     );
-    expect(manifest.setupFileName).toBe("Projecto-1.0.1.Setup.exe");
+    expect(manifest.setupFileName).toBe("Projecto-1.0.2.Setup.exe");
   });
 
   it("keeps unsupported platforms from receiving Windows updates", () => {
-    process.env.PROJECTO_DESKTOP_LATEST_VERSION = "1.0.1";
+    process.env.PROJECTO_DESKTOP_LATEST_VERSION = "1.0.2";
 
     const manifest = buildDesktopUpdateManifest({
       currentVersion: "1.0.0",
