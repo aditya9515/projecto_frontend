@@ -1,7 +1,7 @@
 const DEFAULT_DESKTOP_VERSION = "1.0.1";
 const DEFAULT_WINDOWS_INSTALLER_SHA256 =
-  "EDD668EF6E5663094BC70CCD588E1B83289145AA5205BB6198C95136029D2BBA";
-const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.4 MB";
+  "A877566821A73799A135F600971355A0A9DEFF7C72C578EA4615C53A51A78B67";
+const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.5 MB";
 const DEFAULT_RELEASE_NOTES =
   "Projecto desktop update with launcher, terminal, billing, and workspace reliability improvements.";
 
@@ -42,7 +42,13 @@ function getReleaseTag(version: string) {
   return process.env.PROJECTO_DESKTOP_RELEASE_TAG?.trim() || `v${version}`;
 }
 
-function getReleaseBaseUrl(tag: string) {
+function getReleaseBaseUrl(version: string) {
+  const explicitBaseUrl = process.env.PROJECTO_DESKTOP_RELEASE_BASE_URL?.trim();
+  if (explicitBaseUrl) {
+    return explicitBaseUrl.replace(/\/$/, "");
+  }
+
+  const tag = getReleaseTag(version);
   return `https://github.com/aditya9515/Projecto/releases/download/${tag}`;
 }
 
@@ -81,8 +87,7 @@ export function getWindowsInstallerMetadata(): WindowsInstallerMetadata {
     process.env.PROJECTO_DESKTOP_LATEST_VERSION,
     DEFAULT_DESKTOP_VERSION,
   );
-  const releaseTag = getReleaseTag(version);
-  const releaseBaseUrl = getReleaseBaseUrl(releaseTag);
+  const releaseBaseUrl = getReleaseBaseUrl(version);
   const fileName =
     process.env.PROJECTO_DESKTOP_SETUP_FILE?.trim() ||
     `Projecto-${version}.Setup.exe`;
@@ -116,8 +121,7 @@ export function buildDesktopUpdateManifest(input: {
   const arch = input.arch?.trim() || "x64";
   const isWindows = platform === "win32" || platform === "windows";
   const isSupported = isWindows && arch === "x64";
-  const releaseTag = getReleaseTag(latestVersion);
-  const releaseBaseUrl = getReleaseBaseUrl(releaseTag);
+  const releaseBaseUrl = getReleaseBaseUrl(latestVersion);
   const installer = getWindowsInstallerMetadata();
   const minimumSupportedVersion = cleanVersion(
     process.env.PROJECTO_DESKTOP_MINIMUM_VERSION,

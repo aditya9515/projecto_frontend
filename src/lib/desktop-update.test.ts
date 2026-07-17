@@ -12,6 +12,7 @@ const envKeys = [
   "PROJECTO_DESKTOP_SETUP_URL",
   "PROJECTO_DESKTOP_SETUP_FILE",
   "PROJECTO_DESKTOP_SETUP_SHA256",
+  "PROJECTO_DESKTOP_RELEASE_BASE_URL",
 ] as const;
 
 describe("desktop update metadata", () => {
