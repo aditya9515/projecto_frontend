@@ -1,9 +1,9 @@
-const DEFAULT_DESKTOP_VERSION = "1.0.4";
+const DEFAULT_DESKTOP_VERSION = "1.0.5";
 const DEFAULT_WINDOWS_INSTALLER_SHA256 =
-  "F2AA0FCC154784E012D86A8F232EB531F65B14A789A96D342515931F9ECC1631";
+  "4FD3BE04657A25D04E0157E3136419B800DC093FBB52ADFA711989FE5417AFBA";
 const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.5 MB";
 const DEFAULT_RELEASE_NOTES =
-  "Projecto 1.0.4 restores the streamlined desktop UI, visible Windows Terminal launches, mapped terminal controls, and the Ports view while keeping terminal stop cleanup reliability.";
+  "Projecto 1.0.5 improves mapped Windows Terminal stop cleanup, refreshes the desktop interface, fixes control contrast, and smooths common controls and navigation.";
 
 export type DesktopUpdateManifest = {
   appName: "Projecto";
