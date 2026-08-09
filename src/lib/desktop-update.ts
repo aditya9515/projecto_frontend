@@ -1,9 +1,9 @@
-const DEFAULT_DESKTOP_VERSION = "1.0.5";
+const DEFAULT_DESKTOP_VERSION = "1.0.6";
 const DEFAULT_WINDOWS_INSTALLER_SHA256 =
-  "4FD3BE04657A25D04E0157E3136419B800DC093FBB52ADFA711989FE5417AFBA";
-const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.5 MB";
+  "E95A6AF6FFD43E38B1ADDD2685092EEE5EFE7A850962818657598630EECAB95A";
+const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.7 MB";
 const DEFAULT_RELEASE_NOTES =
-  "Projecto 1.0.5 improves mapped Windows Terminal stop cleanup, refreshes the desktop interface, fixes control contrast, and smooths common controls and navigation.";
+  "Projecto 1.0.6 introduces the redesigned desktop experience with responsive layouts, scoped motion, reduced-motion support, and stronger keyboard focus treatment.";
 
 export type DesktopUpdateManifest = {
   appName: "Projecto";
