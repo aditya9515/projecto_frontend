@@ -1,9 +1,9 @@
-const DEFAULT_DESKTOP_VERSION = "1.0.7";
+const DEFAULT_DESKTOP_VERSION = "1.0.8";
 const DEFAULT_WINDOWS_INSTALLER_SHA256 =
-  "200F851E62C18A2DE4A678A4335ECFEC18BE3A4DEE38ED1560DB585455723728";
-const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.7 MB";
+  "B1F26E9EF060EB05D424321C0501E1894C84F10B372B6C1A3CDBAD7FA34A4BC3";
+const DEFAULT_WINDOWS_INSTALLER_SIZE = "138.9 MB";
 const DEFAULT_RELEASE_NOTES =
-  "Projecto 1.0.7 adds automatic safe cleanup, a storage preview and manual cleanup panel, 30-day run-artifact retention, cache cleanup, and strong protection for projects, settings, credentials, backups, and active runs.";
+  "Projecto 1.0.8 refreshes the desktop identity with the new Projecto icon across the Windows installer, executable, taskbar, app window, and platform assets.";
 
 export type DesktopUpdateManifest = {
   appName: "Projecto";
