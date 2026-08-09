@@ -1,9 +1,9 @@
-const DEFAULT_DESKTOP_VERSION = "1.0.6";
+const DEFAULT_DESKTOP_VERSION = "1.0.7";
 const DEFAULT_WINDOWS_INSTALLER_SHA256 =
-  "E95A6AF6FFD43E38B1ADDD2685092EEE5EFE7A850962818657598630EECAB95A";
+  "200F851E62C18A2DE4A678A4335ECFEC18BE3A4DEE38ED1560DB585455723728";
 const DEFAULT_WINDOWS_INSTALLER_SIZE = "139.7 MB";
 const DEFAULT_RELEASE_NOTES =
-  "Projecto 1.0.6 introduces the redesigned desktop experience with responsive layouts, scoped motion, reduced-motion support, and stronger keyboard focus treatment.";
+  "Projecto 1.0.7 adds automatic safe cleanup, a storage preview and manual cleanup panel, 30-day run-artifact retention, cache cleanup, and strong protection for projects, settings, credentials, backups, and active runs.";
 
 export type DesktopUpdateManifest = {
   appName: "Projecto";
