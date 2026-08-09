@@ -5,12 +5,15 @@ import { cn } from "@/lib/utils";
 
 const buttonStyles = {
   primary:
-    "projecto-inverse-text border border-emerald bg-foreground shadow-[0_14px_32px_rgba(82,171,152,0.16)] hover:bg-muted-strong hover:shadow-[0_20px_40px_rgba(82,171,152,0.22)]",
+    "border border-brand bg-brand text-foreground hover:border-foreground hover:bg-foreground hover:text-[#f1f1f1]",
   secondary:
-    "border border-border bg-card text-foreground hover:border-border-strong hover:bg-card-strong",
+    "border border-border-strong bg-transparent text-foreground hover:bg-foreground hover:text-[#f1f1f1]",
   ghost:
-    "text-muted-strong hover:bg-card hover:text-foreground",
+    "border border-transparent text-muted-strong hover:border-border hover:bg-card hover:text-foreground",
 };
+
+const sharedButtonStyles =
+  "group/button inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-[6px] px-5 py-3 font-mono text-xs font-medium uppercase tracking-[0.08em] transition-[color,background-color,border-color,transform] duration-300 ease-out hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
 
 interface CommonButtonProps {
   children: ReactNode;
@@ -38,7 +41,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
       ...linkProps
     } = props as LinkButtonProps;
     const classes = cn(
-      "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border-strong disabled:bg-card disabled:text-foreground",
+      sharedButtonStyles,
       buttonStyles[variant],
       className,
     );
@@ -68,7 +71,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     ...buttonProps
   } = props as ButtonProps;
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold tracking-[0.04em] transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:cursor-not-allowed disabled:border-border-strong disabled:bg-card disabled:text-foreground",
+    sharedButtonStyles,
     buttonStyles[variant],
     className,
   );

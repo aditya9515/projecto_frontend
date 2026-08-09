@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Manrope } from "next/font/google";
+import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { SiteFooter } from "@/components/site/footer";
@@ -7,8 +7,8 @@ import { SiteHeader } from "@/components/site/header";
 
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
 
@@ -46,11 +46,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${ibmPlexMono.variable} h-full scroll-smooth`}
+      className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} h-full`}
     >
       <body className="min-h-full bg-background text-foreground antialiased">
         <Providers>
-          <div className="relative isolate flex min-h-screen flex-col overflow-hidden">
+          <div className="site-frame relative isolate flex min-h-screen flex-col overflow-clip">
             <SiteHeader />
             <main className="flex-1">{children}</main>
             <SiteFooter />

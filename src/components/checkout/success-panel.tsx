@@ -65,21 +65,27 @@ export function SuccessPanel() {
   }, [user]);
 
   return (
-    <div className="section-shell py-16 sm:py-20">
-      <Card className="scan-line relative mx-auto max-w-3xl text-center">
-        <div className="projecto-icon-surface mx-auto flex size-16 items-center justify-center rounded-full border">
-          <CheckCircle2 className="size-8" />
-        </div>
-        <h1 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground">
-          Payment received. projecto is updating your Pro access.
-        </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-strong">
-          Payments and subscriptions are handled securely through Dodo Payments.
-          This page waits for the billing webhook to sync your subscription state
-          into the projecto backend.
-        </p>
+    <div className="section-shell py-12 sm:py-20">
+      <Card className="relative mx-auto max-w-5xl overflow-hidden border-border-strong p-0" data-reveal>
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="bg-brand p-7 sm:p-10 lg:p-14">
+            <div className="flex size-14 items-center justify-center rounded-[6px] border border-foreground bg-foreground text-brand">
+              <CheckCircle2 className="size-7" />
+            </div>
+            <div className="mt-8 font-mono text-[0.68rem] uppercase tracking-[0.12em]">Payment received</div>
+            <h1 className="mt-5 text-5xl font-medium leading-[0.92] tracking-[-0.06em] sm:text-6xl">
+              Projecto is updating your Pro access.
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-8">
+              Dodo Payments securely handled checkout. This page now waits for the
+              billing webhook to sync your subscription into the Projecto backend.
+            </p>
+          </div>
 
-        <div className="mt-8 rounded-[1.75rem] border border-border bg-card p-6 text-left">
+          <div className="flex flex-col justify-between p-7 sm:p-10 lg:p-14">
+            <div>
+              <div className="account-label">Subscription status</div>
+              <div className="mt-6 rounded-[6px] border border-border bg-background p-5 text-left">
           {loading ? (
             <div className="inline-flex items-center gap-2 text-sm text-muted-strong">
               <LoaderCircle className="size-4 animate-spin" />
@@ -87,10 +93,10 @@ export function SuccessPanel() {
             </div>
           ) : user ? (
             <div className="space-y-3 text-sm text-muted-strong">
-              <div>Email: {user.email}</div>
-              <div>Plan: {subscription?.plan === "pro" ? "Pro" : "Free"}</div>
-              <div>Status: {subscription?.status ?? "waiting for webhook"}</div>
-              <div>Renewal: {formatDateOnly(subscription?.expiresAt)}</div>
+              <div className="flex justify-between gap-4 border-b border-border pb-3"><span className="text-muted">Email</span><span className="truncate font-medium">{user.email}</span></div>
+              <div className="flex justify-between gap-4 border-b border-border pb-3"><span className="text-muted">Plan</span><span className="font-medium">{subscription?.plan === "pro" ? "Pro" : "Free"}</span></div>
+              <div className="flex justify-between gap-4 border-b border-border pb-3"><span className="text-muted">Status</span><span className="font-medium">{subscription?.status ?? "waiting"}</span></div>
+              <div className="flex justify-between gap-4"><span className="text-muted">Renewal</span><span className="font-medium">{formatDateOnly(subscription?.expiresAt)}</span></div>
             </div>
           ) : (
             <div className="text-sm text-muted">
@@ -99,17 +105,14 @@ export function SuccessPanel() {
             </div>
           )}
           {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
-        </div>
+              </div>
+            </div>
 
-        <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-          <ContinueInDesktopButton
-            autoStart
-            subscription={subscription}
-            user={user}
-          />
-          <Button href="/account" variant="secondary">
-            Go to account
-          </Button>
+            <div className="mt-8 grid gap-3">
+              <ContinueInDesktopButton autoStart className="w-full" subscription={subscription} user={user} />
+              <Button className="w-full" href="/account" variant="secondary">Go to account</Button>
+            </div>
+          </div>
         </div>
       </Card>
     </div>

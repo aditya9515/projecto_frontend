@@ -226,13 +226,13 @@ export function AccountDashboard() {
   }
 
   return (
-    <div className="section-shell py-16 sm:py-20">
-      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <div className="section-shell py-12 sm:py-20">
+      <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
         <aside className="space-y-6 self-start lg:sticky lg:top-28">
-          <Card className="reveal-1 overflow-hidden p-0">
+          <Card className="reveal-1 overflow-hidden border-border-strong p-0">
             <div className="border-b border-border px-6 py-6">
               <div className="flex items-center gap-4">
-                <div className="projecto-icon-surface flex size-16 items-center justify-center rounded-[1.5rem] border text-lg font-semibold">
+                <div className="projecto-icon-surface flex size-16 items-center justify-center rounded-[6px] border text-lg font-semibold">
                   {initialsFromName(user.displayName, user.email)}
                 </div>
                 <div className="min-w-0">
@@ -310,8 +310,11 @@ export function AccountDashboard() {
         </aside>
 
         <div className="space-y-6">
-          <Card className="reveal-2">
+          <Card className="reveal-2 border-border-strong bg-card-strong">
             <div className="account-label">Account tools</div>
+            <h2 className="mt-4 text-3xl font-medium tracking-[-0.045em] text-foreground">
+              Manage the account behind your desktop access.
+            </h2>
             <div className="mt-4 max-w-2xl text-sm leading-7 text-muted">
               Projecto uses this account site as the source of truth for your
               plan, renewal state, hidden-project reconciliation, and secure
@@ -369,11 +372,11 @@ export function AccountDashboard() {
               {sessions.length > 0 ? (
                 sessions.map((session) => (
                   <div
-                    className="flex flex-col gap-4 rounded-[1.5rem] border border-border bg-card-strong p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-4 rounded-[6px] border border-border bg-card-strong p-4 sm:flex-row sm:items-center sm:justify-between"
                     key={session.id}
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-background text-foreground">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[5px] border border-border bg-background text-foreground">
                         <Monitor className="size-4" />
                       </div>
                       <div className="min-w-0">
@@ -401,7 +404,7 @@ export function AccountDashboard() {
                   </div>
                 ))
               ) : (
-                <div className="rounded-[1.5rem] border border-dashed border-border px-5 py-6 text-sm text-muted">
+                <div className="rounded-[6px] border border-dashed border-border px-5 py-6 text-sm text-muted">
                   No desktop sessions have been created yet.
                 </div>
               )}

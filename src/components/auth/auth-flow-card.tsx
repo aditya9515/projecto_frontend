@@ -19,8 +19,8 @@ import {
 } from "firebase/auth";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { RollingText } from "@/components/motion/rolling-text";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { buildPostLoginDestination, parseBillingCycle } from "@/lib/auth-routing";
 import { authorizedFetch } from "@/lib/client-api";
 import { getFirebaseAuthClient } from "@/lib/firebase/client";
@@ -253,97 +253,86 @@ export function AuthFlowCard({
   }, [busyProvider, finalizeLogin, loading, status, user]);
 
   return (
-    <div className="section-shell flex py-16 sm:py-20">
-      <div className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(340px,0.68fr)] lg:items-start">
-        <div className="max-w-2xl">
-          <div className="eyebrow reveal-1">
+    <div className="section-shell py-12 sm:py-20">
+      <div className="mx-auto grid w-full max-w-6xl overflow-hidden rounded-[10px] border border-border-strong bg-card lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="bg-card-strong p-7 sm:p-10 lg:p-14">
+          <div className="eyebrow" data-reveal>
             {mode === "desktop" ? "Desktop sign-in" : "Authentication"}
           </div>
-          <h1 className="reveal-2 mt-6 text-4xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
+          <h1 className="mt-8 max-w-2xl text-5xl font-medium leading-[0.92] tracking-[-0.06em] sm:text-6xl" data-reveal>
             {mode === "desktop"
-              ? "Connect your desktop app to your projecto account."
-              : "Sign in to sync billing, subscriptions, and desktop access."}
+              ? "Connect the app. Keep the token off the URL."
+              : "One account for billing and desktop access."}
           </h1>
-          <p className="reveal-3 mt-5 text-lg leading-8 text-muted-strong">
+          <p className="mt-6 max-w-xl text-base leading-8 text-muted-strong" data-reveal>
             {mode === "desktop"
-              ? "This page is opened by the Electron app so projecto can start a secure browser sign-in, create a short-lived desktop callback, and send you back to the app."
-              : "Choose Google or Apple sign-in. projecto uses authentication only for account and subscription sync across your devices."}
+              ? "Projecto creates a short-lived, one-time callback in the browser and returns you safely to the Electron app."
+              : "Choose Google or Apple. Authentication is used only for account and subscription sync across your devices."}
           </p>
-          <div className="reveal-3 mt-8 space-y-3 text-sm text-muted">
-            <p>projecto never uploads your source code.</p>
-            <p>Payments and subscriptions are handled securely through Dodo Payments.</p>
-            <p>
-              Google sign-in and Apple sign-in are used only for account and
-              subscription sync.
-            </p>
-            <p>
-              Google accounts use Firebase&apos;s verified email identity.
-              projecto does not request Gmail inbox access.
-            </p>
+
+          <div className="mt-10 border-t border-border-strong" data-reveal>
+            {[
+              "Projecto never uploads your source code.",
+              "Dodo Payments securely handles subscriptions.",
+              "Google and Apple sign-in are only for account sync.",
+              "Projecto never requests Gmail inbox access.",
+            ].map((note, index) => (
+              <div className="flex gap-3 border-b border-border py-3 text-sm text-muted" key={note}>
+                <span className="font-mono text-[0.62rem]">0{index + 1}</span>
+                <span>{note}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        <Card className="scan-line relative max-w-xl reveal-2">
-          <div className="account-label">
-            {mode === "desktop" ? "Continue in browser" : "Continue to projecto"}
-          </div>
-          <div className="mt-6 space-y-4">
-            <Button
-              className="w-full justify-between"
-              disabled={!!busyProvider}
-              onClick={() => void startSignIn("google")}
-              type="button"
-              variant="secondary"
-            >
-              <span>Continue with Google</span>
-              {busyProvider === "google" ? (
-                <LoaderCircle className="size-4 animate-spin" />
-              ) : (
-                <ArrowRight className="size-4" />
-              )}
-            </Button>
+        <div className="dark-field noise-field order-first flex flex-col justify-between p-7 sm:p-10 lg:order-last lg:p-14" data-reveal>
+          <div>
+            <div className="account-label">
+              {mode === "desktop" ? "Continue in browser" : "Continue to Projecto"}
+            </div>
+            <h2 className="mt-5 text-3xl font-medium tracking-[-0.045em]">
+              Choose your sign-in provider.
+            </h2>
 
-            <Button
-              className="w-full justify-between"
-              disabled={!!busyProvider}
-              onClick={() => void startSignIn("apple")}
-              type="button"
-              variant="secondary"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Apple className="size-4" />
-                Continue with Apple
-              </span>
-              {busyProvider === "apple" ? (
-                <LoaderCircle className="size-4 animate-spin" />
-              ) : (
-                <ArrowRight className="size-4" />
-              )}
-            </Button>
-          </div>
+            <div className="mt-8 space-y-3">
+              <Button
+                className="w-full justify-between border-background bg-background text-foreground hover:border-brand hover:bg-brand hover:text-foreground"
+                disabled={!!busyProvider}
+                onClick={() => void startSignIn("google")}
+                type="button"
+              >
+                <RollingText>Continue with Google</RollingText>
+                {busyProvider === "google" ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+              </Button>
 
-          <div className="mt-6 rounded-[1.5rem] border border-border bg-card p-4 text-sm leading-7 text-muted">
-            <p>
+              <Button
+                className="w-full justify-between border-[#555550] text-[#f1f1f1] hover:border-brand hover:bg-brand hover:text-foreground"
+                disabled={!!busyProvider}
+                onClick={() => void startSignIn("apple")}
+                type="button"
+                variant="secondary"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <Apple className="size-4" />
+                  <RollingText>Continue with Apple</RollingText>
+                </span>
+                {busyProvider === "apple" ? <LoaderCircle className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+              </Button>
+            </div>
+
+            <div className="mt-7 rounded-[6px] border border-[#454541] bg-[#202020] p-4 text-sm leading-7 text-[#aaa9a3]">
               {mode === "desktop"
-                ? "After sign-in, projecto creates a short-lived desktop callback and redirects you back to the desktop app through your configured desktop protocol."
-                : "After sign-in, projecto saves your user profile and takes you to pricing or account depending on where you started."}
-            </p>
+                ? "After sign-in, Projecto creates a short-lived desktop callback and redirects through the configured Projecto protocol."
+                : "After sign-in, Projecto syncs your profile and resumes the pricing or account flow where you started."}
+            </div>
           </div>
 
-          {!ready ? (
-            <p className="mt-5 text-sm text-amber">
-              Firebase Authentication is not configured yet. Add the public Firebase
-              keys before testing Google or Apple sign-in.
-            </p>
-          ) : null}
-          {status ? (
-            <p className="mt-5 inline-flex items-center gap-2 text-sm text-foreground">
-              <LoaderCircle className="size-4 animate-spin" />
-              {status}
-            </p>
-          ) : null}
-          {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}
-        </Card>
+          <div className="mt-8 min-h-7" aria-live="polite">
+            {!ready ? <p className="text-sm text-brand">Firebase Authentication is not configured yet.</p> : null}
+            {status ? <p className="inline-flex items-center gap-2 text-sm text-[#f1f1f1]"><LoaderCircle className="size-4 animate-spin" />{status}</p> : null}
+            {error ? <p className="text-sm text-[#ff9a9a]">{error}</p> : null}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,38 +1,39 @@
-import { ExternalLink, PlayCircle } from "lucide-react";
+import { ArrowUpRight, Play } from "lucide-react";
 
+import { RollingText } from "@/components/motion/rolling-text";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { PROJECTO_DEMO_VIDEO } from "@/lib/demo-video";
 
 export function DemoVideoSection() {
   return (
-    <section id="demo" className="section-shell py-12">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
-        <Card className="reveal-1 h-full">
+    <section className="border-b border-border-strong bg-card-strong py-16 sm:py-24" id="demo">
+      <div className="section-shell grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
+        <div data-reveal>
           <div className="eyebrow">
-            <PlayCircle className="size-4" />
-            Demo Video
+            <Play className="size-3.5 fill-current" />
+            Product walkthrough
           </div>
-          <h2 className="mt-5 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
-            Watch Projecto manage a local workspace.
+          <h2 className="mt-7 max-w-xl text-4xl font-medium leading-[0.96] tracking-[-0.055em] sm:text-6xl">
+            See a local workspace go from folder to running app.
           </h2>
-          <p className="mt-5 text-base leading-8 text-muted">
-            This walkthrough shows the desktop flow end to end: import a local project,
-            detect its stack, launch it through the mapped Windows terminal, parse the
-            app URL, track the running port, and stop the session from Projecto.
+          <p className="mt-6 max-w-lg text-base leading-8 text-muted">
+            Import a project, detect its stack, launch it through Windows Terminal,
+            parse the app URL, track the port, and stop the session from Projecto.
           </p>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Button href="/download">Download App</Button>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button href="/download">
+              <RollingText>Download app</RollingText>
+            </Button>
             <Button href={PROJECTO_DEMO_VIDEO.href} target="_blank" variant="secondary">
-              Open Video
-              <ExternalLink className="size-4" />
+              <RollingText>Open video</RollingText>
+              <ArrowUpRight className="size-4" />
             </Button>
           </div>
-        </Card>
+        </div>
 
-        <div className="reveal-2 overflow-hidden rounded-[2rem] border border-border bg-card p-3 text-foreground">
+        <div className="overflow-hidden rounded-[10px] border border-border-strong bg-foreground p-2" data-reveal>
           <video
-            className="aspect-video w-full rounded-[1.4rem] border border-border bg-background object-cover"
+            className="aspect-video w-full rounded-[5px] bg-[#0c0c0c] object-cover"
             controls
             poster={PROJECTO_DEMO_VIDEO.poster}
             preload="metadata"
@@ -40,11 +41,9 @@ export function DemoVideoSection() {
             <source src={PROJECTO_DEMO_VIDEO.href} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-          <div className="flex flex-col gap-2 px-2 py-4 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 px-2 py-3 font-mono text-[0.65rem] uppercase tracking-[0.1em] text-[#aaa9a3] sm:flex-row sm:items-center sm:justify-between">
             <span>{PROJECTO_DEMO_VIDEO.title}</span>
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-strong">
-              3 min 53 sec
-            </span>
+            <span>03:53 / Local workflow</span>
           </div>
         </div>
       </div>
