@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Command, Download, LogOut, Menu, X } from "lucide-react";
@@ -17,11 +17,34 @@ const navItems = [
   { href: "/pricing", label: "Pricing" },
 ];
 
+function subscribeToLocationChange(onStoreChange: () => void) {
+  window.addEventListener("hashchange", onStoreChange);
+  window.addEventListener("popstate", onStoreChange);
+
+  return () => {
+    window.removeEventListener("hashchange", onStoreChange);
+    window.removeEventListener("popstate", onStoreChange);
+  };
+}
+
+function getHashSnapshot() {
+  return window.location.hash;
+}
+
+function getServerHashSnapshot() {
+  return "";
+}
+
 export function SiteHeader() {
   const { user, loading, signOut } = useAuth();
   const { downloadUrl } = getOptionalAppConfig();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const currentHash = useSyncExternalStore(
+    subscribeToLocationChange,
+    getHashSnapshot,
+    getServerHashSnapshot,
+  );
 
   return (
     <header className="sticky top-1 z-40 border-b border-border-strong bg-background/95 backdrop-blur-md max-sm:top-0.5">
@@ -45,9 +68,9 @@ export function SiteHeader() {
           {navItems.map((item) => {
             const active =
               item.href === "/"
-                ? pathname === "/"
+                ? pathname === "/" && currentHash !== "#demo"
                 : item.href.startsWith("/#")
-                  ? false
+                  ? pathname === "/" && currentHash === item.href.slice(1)
                   : pathname.startsWith(item.href);
 
             return (
