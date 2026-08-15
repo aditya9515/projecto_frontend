@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Command, Download, LogOut, Menu, X } from "lucide-react";
@@ -17,47 +17,46 @@ const navItems = [
   { href: "/pricing", label: "Pricing" },
 ];
 
-function subscribeToLocationChange(onStoreChange: () => void) {
-  let syncTimer: number | undefined;
-  const syncAfterHashLinkClick = (event: MouseEvent) => {
-    const target = event.target;
-    if (!(target instanceof Element) || !target.closest('a[href*="#"]')) {
-      return;
-    }
-
-    syncTimer = window.setTimeout(onStoreChange, 0);
-  };
-
-  window.addEventListener("hashchange", onStoreChange);
-  window.addEventListener("popstate", onStoreChange);
-  window.addEventListener("click", syncAfterHashLinkClick);
-
-  return () => {
-    window.clearTimeout(syncTimer);
-    window.removeEventListener("hashchange", onStoreChange);
-    window.removeEventListener("popstate", onStoreChange);
-    window.removeEventListener("click", syncAfterHashLinkClick);
-  };
-}
-
-function getHashSnapshot() {
-  return window.location.hash;
-}
-
-function getServerHashSnapshot() {
-  return "";
-}
-
 export function SiteHeader() {
   const { user, loading, signOut } = useAuth();
   const { downloadUrl } = getOptionalAppConfig();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const currentHash = useSyncExternalStore(
-    subscribeToLocationChange,
-    getHashSnapshot,
-    getServerHashSnapshot,
-  );
+  const [currentHash, setCurrentHash] = useState("");
+
+  useEffect(() => {
+    const syncHash = () => setCurrentHash(window.location.hash);
+    const syncHashFromLink = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const link = target.closest<HTMLAnchorElement>("a[href]");
+      if (!link) {
+        return;
+      }
+
+      const destination = new URL(link.href, window.location.href);
+      if (
+        destination.origin === window.location.origin &&
+        destination.pathname === window.location.pathname
+      ) {
+        setCurrentHash(destination.hash);
+      }
+    };
+
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    window.addEventListener("popstate", syncHash);
+    document.addEventListener("click", syncHashFromLink);
+
+    return () => {
+      window.removeEventListener("hashchange", syncHash);
+      window.removeEventListener("popstate", syncHash);
+      document.removeEventListener("click", syncHashFromLink);
+    };
+  }, [pathname]);
 
   return (
     <header className="sticky top-1 z-40 border-b border-border-strong bg-background/95 backdrop-blur-md max-sm:top-0.5">
