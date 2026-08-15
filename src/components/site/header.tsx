@@ -18,12 +18,25 @@ const navItems = [
 ];
 
 function subscribeToLocationChange(onStoreChange: () => void) {
+  let syncTimer: number | undefined;
+  const syncAfterHashLinkClick = (event: MouseEvent) => {
+    const target = event.target;
+    if (!(target instanceof Element) || !target.closest('a[href*="#"]')) {
+      return;
+    }
+
+    syncTimer = window.setTimeout(onStoreChange, 0);
+  };
+
   window.addEventListener("hashchange", onStoreChange);
   window.addEventListener("popstate", onStoreChange);
+  window.addEventListener("click", syncAfterHashLinkClick);
 
   return () => {
+    window.clearTimeout(syncTimer);
     window.removeEventListener("hashchange", onStoreChange);
     window.removeEventListener("popstate", onStoreChange);
+    window.removeEventListener("click", syncAfterHashLinkClick);
   };
 }
 
