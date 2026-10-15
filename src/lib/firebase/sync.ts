@@ -3,43 +3,37 @@
 import type { User } from "firebase/auth";
 
 import type { AuthSyncPayload } from "@/lib/types";
+import { authorizedFetch, readApiResponse } from "@/lib/client-api";
 
 function uniqueProviders(user: User) {
   return Array.from(new Set(user.providerData.map((item) => item.providerId)));
 }
 
-export async function syncFirebaseUser(user: User) {
-  const idToken = await user.getIdToken();
+const pendingSyncs = new Map<string, Promise<unknown>>();
+
+export function syncFirebaseUser(user: User) {
+  const pending = pendingSyncs.get(user.uid);
+  if (pending) return pending;
+  const sync = syncUser(user).finally(() => { pendingSyncs.delete(user.uid); });
+  pendingSyncs.set(user.uid, sync);
+  return sync;
+}
+
+async function syncUser(user: User) {
   const payload: AuthSyncPayload = {
-    email: user.email ?? "",
+    ...(user.email ? { email: user.email } : {}),
     displayName: user.displayName ?? user.email ?? "projecto user",
     photoURL: user.photoURL ?? null,
     providers: uniqueProviders(user),
   };
 
-  const response = await fetch("/api/auth/sync", {
+  const response = await authorizedFetch(user, "/api/auth/sync", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    let errorMessage = "Unable to sync your account right now.";
-
-    try {
-      const data = (await response.json()) as { error?: string };
-      if (data.error) {
-        errorMessage = data.error;
-      }
-    } catch {
-      // Fall back to the generic message if the response body is empty or invalid.
-    }
-
-    throw new Error(errorMessage);
-  }
-
-  return response.json();
+  return readApiResponse(response, "Unable to sync your account right now. Please try again.");
 }

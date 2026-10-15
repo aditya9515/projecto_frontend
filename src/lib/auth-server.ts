@@ -14,5 +14,13 @@ export async function requireVerifiedUser(request: NextRequest) {
     throw new Error("Unauthorized");
   }
 
-  return getAdminAuth().verifyIdToken(idToken);
+  try {
+    return await getAdminAuth().verifyIdToken(idToken, true);
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (code && ["auth/argument-error", "auth/invalid-id-token", "auth/id-token-expired", "auth/id-token-revoked", "auth/user-disabled", "auth/user-not-found"].includes(code)) {
+      throw new Error("Unauthorized");
+    }
+    throw error;
+  }
 }

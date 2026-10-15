@@ -1,7 +1,9 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
-import { getUserProfile } from "@/lib/firestore";
+import { getUserProfile, listSubscriptionsForUser } from "@/lib/firestore";
+import { selectPrimarySubscription } from "@/lib/subscriptions";
 import { getProjectDirectoryAccess } from "@/lib/project-directories";
 
 export const runtime = "nodejs";
@@ -9,9 +11,10 @@ export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   try {
     const decoded = await requireVerifiedUser(request);
-    const [profile, access] = await Promise.all([
+    const [profile, access, subscriptions] = await Promise.all([
       getUserProfile(decoded.uid),
       getProjectDirectoryAccess(decoded.uid),
+      listSubscriptionsForUser(decoded.uid),
     ]);
 
     return NextResponse.json({
@@ -20,20 +23,9 @@ export async function GET(request: NextRequest) {
       ...access.subscription,
       entitlements: access.entitlements,
       archivedProjectCount: access.archivedProjectCount,
-    });
+      canManageBilling: !!selectPrimarySubscription(subscriptions)?.dodoCustomerId,
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to load subscription status.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", undefined);
   }
 }

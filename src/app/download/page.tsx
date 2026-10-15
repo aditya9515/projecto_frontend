@@ -12,23 +12,31 @@ import {
 import { DemoVideoSection } from "@/components/marketing/demo-video-section";
 import { RollingText } from "@/components/motion/rolling-text";
 import { Button } from "@/components/ui/button";
-import { getWindowsInstallerMetadata } from "@/lib/desktop-update";
+import { getLatestWindowsInstaller } from "@/lib/latest-release";
 
 export const metadata: Metadata = {
   title: "Download",
   description: "Projecto desktop download hub.",
 };
 
-export default function DownloadPage() {
-  const windowsInstaller = getWindowsInstallerMetadata();
+export default async function DownloadPage() {
+  let windowsInstaller;
+  try {
+    windowsInstaller = await getLatestWindowsInstaller();
+  } catch {
+    return <section className="section-shell py-16">
+      <h1 className="text-4xl font-medium">Download Projecto</h1>
+      <p className="mt-5 text-muted">We could not load the latest release details. Please try again shortly.</p>
+      <Button href="/api/download" className="mt-6">Try latest download</Button>
+    </section>;
+  }
   const platformCards = [
     {
       name: "Windows",
       detail: `Projecto ${windowsInstaller.version} for Windows x64.`,
       icon: Monitor,
       status: "Available now",
-      href: windowsInstaller.href,
-      fileName: windowsInstaller.fileName,
+      href: "/api/download",
     },
     {
       name: "macOS",
@@ -106,7 +114,7 @@ export default function DownloadPage() {
                 </div>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Button download={windowsInstaller.fileName} href={windowsInstaller.href}>
+                  <Button href="/api/download">
                     <RollingText>Download for Windows</RollingText>
                     <ArrowRight className="size-4" />
                   </Button>
@@ -165,7 +173,7 @@ export default function DownloadPage() {
                 <h3 className="mt-14 text-3xl font-medium tracking-[-0.045em]">{platform.name}</h3>
                 <p className="mt-4 flex-1 text-sm leading-7 text-muted">{platform.detail}</p>
                 {platform.href ? (
-                  <Button className="mt-7 w-full" download={platform.fileName} href={platform.href}>
+                  <Button className="mt-7 w-full" href={platform.href}>
                     <RollingText>Download Windows</RollingText>
                   </Button>
                 ) : (

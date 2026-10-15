@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 
 import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } from "@/lib/cors";
@@ -15,10 +16,11 @@ export function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const env = getAppRuntimeEnv();
+  let allowedOrigin: string | null = null;
 
   try {
-    const allowedOrigin = ensureDesktopOrigin(
+    const env = getAppRuntimeEnv();
+    allowedOrigin = ensureDesktopOrigin(
       request,
       env.APP_BASE_URL,
       env.DESKTOP_ALLOWED_ORIGINS,
@@ -35,21 +37,6 @@ export async function POST(request: NextRequest) {
       },
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "Origin not allowed") {
-      return NextResponse.json(
-        { error: "Origin not allowed" },
-        { status: 403 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to process license activation request.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", buildDesktopCorsHeaders(allowedOrigin));
   }
 }

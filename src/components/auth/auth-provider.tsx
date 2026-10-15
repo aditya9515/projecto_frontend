@@ -20,6 +20,7 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   ready: boolean;
+  error: string | null;
   signOut: () => Promise<void>;
 }
 
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setReady(true);
       unsubscribe = onIdTokenChanged(auth, async (nextUser) => {
+        if (!isMounted) return;
         setUser(nextUser);
         setLoading(false);
 
@@ -62,8 +65,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Sync errors are surfaced on interactive pages when a user action depends on it.
           }
         }
+      }, () => {
+        if (!isMounted) return;
+        setLoading(false);
+        setError("Unable to restore your sign-in session. Please reload and try again.");
       });
-    })();
+    })().catch((initError) => {
+      if (!isMounted) return;
+      setLoading(false);
+      setReady(false);
+      setError(initError instanceof Error ? initError.message : "Unable to initialize sign-in. Please reload and try again.");
+    });
 
     return () => {
       isMounted = false;
@@ -76,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       loading,
       ready,
+      error,
       signOut: async () => {
         const auth = await getFirebaseAuthClient();
         if (!auth) {
@@ -85,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await firebaseSignOut(auth);
       },
     }),
-    [loading, ready, user],
+    [error, loading, ready, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

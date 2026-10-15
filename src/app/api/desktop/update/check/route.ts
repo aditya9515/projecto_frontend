@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
@@ -5,25 +6,28 @@ import {
   desktopOptionsResponse,
   ensureDesktopOrigin,
 } from "@/lib/cors";
+import { getLatestWindowsInstaller } from "@/lib/latest-release";
 import { buildDesktopUpdateManifest } from "@/lib/desktop-update";
-import { getOptionalAppConfig } from "@/lib/env";
+import { getAppRuntimeEnv } from "@/lib/env";
 
 export const runtime = "nodejs";
 
 export function OPTIONS(request: NextRequest) {
-  const env = getOptionalAppConfig();
-  return desktopOptionsResponse(request, env.appBaseUrl);
+  const env = getAppRuntimeEnv();
+  return desktopOptionsResponse(request, env.APP_BASE_URL, env.DESKTOP_ALLOWED_ORIGINS);
 }
 
-export function GET(request: NextRequest) {
-  const env = getOptionalAppConfig();
+export async function GET(request: NextRequest) {
+  let allowedOrigin: string | null = null;
 
   try {
-    const allowedOrigin = ensureDesktopOrigin(request, env.appBaseUrl);
+    const env = getAppRuntimeEnv();
+    allowedOrigin = ensureDesktopOrigin(request, env.APP_BASE_URL, env.DESKTOP_ALLOWED_ORIGINS);
     const { searchParams } = request.nextUrl;
 
     return NextResponse.json(
       buildDesktopUpdateManifest({
+        installer: await getLatestWindowsInstaller(),
         currentVersion: searchParams.get("version") ?? undefined,
         platform: searchParams.get("platform") ?? undefined,
         arch: searchParams.get("arch") ?? undefined,
@@ -33,21 +37,6 @@ export function GET(request: NextRequest) {
       },
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "Origin not allowed") {
-      return NextResponse.json(
-        { error: "Origin not allowed" },
-        { status: 403 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to build desktop update manifest.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", buildDesktopCorsHeaders(allowedOrigin));
   }
 }

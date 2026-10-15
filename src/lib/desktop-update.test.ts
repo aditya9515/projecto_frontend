@@ -22,6 +22,13 @@ describe("desktop update metadata", () => {
     }
   });
 
+  it("uses one published release for the installer and Squirrel feed despite stale defaults", () => {
+    process.env.PROJECTO_DESKTOP_LATEST_VERSION = "1.0.8";
+    const installer = { version: "1.0.9", fileName: "Projecto-1.0.9.Setup.exe", href: "https://github.com/aditya9515/Projecto/releases/download/v1.0.9/Projecto-1.0.9.Setup.exe", sha256: "published-digest", size: "140 MB" };
+    const manifest = buildDesktopUpdateManifest({ currentVersion: "1.0.8", installer });
+    expect(manifest).toMatchObject({ latestVersion: "1.0.9", setupUrl: installer.href, setupSha256: installer.sha256, updateAvailable: true, feedUrl: "https://github.com/aditya9515/Projecto/releases/download/v1.0.9" });
+  });
+
   it("compares desktop versions numerically", () => {
     expect(compareDesktopVersions("1.0.10", "1.0.2")).toBe(1);
     expect(compareDesktopVersions("v1.0.0", "1.0.0")).toBe(0);

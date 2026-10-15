@@ -10,8 +10,9 @@ import { RollingText } from "@/components/motion/rolling-text";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { buildCheckoutLoginHref, parseBillingCycle } from "@/lib/auth-routing";
-import { authorizedFetch } from "@/lib/client-api";
+import { authorizedFetch, readApiResponse } from "@/lib/client-api";
 import type { AppSubscriptionSnapshot, BillingCycle } from "@/lib/types";
+import { useAuthorizedResource } from "@/lib/use-authorized-resource";
 import { cn } from "@/lib/utils";
 
 const plans = {
@@ -55,9 +56,8 @@ export function PricingPageClient() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     parseBillingCycle(searchParams.get("billing")),
   );
-  const [subscription, setSubscription] = useState<AppSubscriptionSnapshot | null>(
-    null,
-  );
+  const account = useAuthorizedResource<AppSubscriptionSnapshot>(user, "/api/subscription/status", "Unable to verify your current plan. Please retry before checkout.");
+  const subscription = account.data;
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const autoCheckoutStarted = useRef(false);
@@ -71,6 +71,11 @@ export function PricingPageClient() {
         return;
       }
 
+      if (!subscription || account.loading || account.error) return;
+      if (subscription.plan === "pro" && subscription.status === "active") {
+        router.push("/account");
+        return;
+      }
       setError(null);
       setIsSubmitting(true);
 
@@ -83,13 +88,10 @@ export function PricingPageClient() {
           body: JSON.stringify({ billingCycle: selectedCycle }),
         });
 
-        const payload = (await response.json()) as {
-          error?: string;
-          checkoutUrl?: string;
-        };
+        const payload = await readApiResponse<{ checkoutUrl?: string }>(response, "Unable to start checkout.");
 
         if (!response.ok || !payload.checkoutUrl) {
-          throw new Error(payload.error ?? "Unable to start checkout.");
+          throw new Error("Unable to start checkout.");
         }
 
         window.location.href = payload.checkoutUrl;
@@ -102,7 +104,7 @@ export function PricingPageClient() {
         setIsSubmitting(false);
       }
     },
-    [router, user],
+    [account.error, account.loading, router, subscription, user],
   );
 
   useEffect(() => {
@@ -111,47 +113,18 @@ export function PricingPageClient() {
       loading ||
       !hasCheckoutIntent ||
       autoCheckoutStarted.current ||
-      isSubmitting
+      isSubmitting ||
+      !subscription ||
+      account.loading ||
+      !!account.error
     ) {
       return;
     }
 
     autoCheckoutStarted.current = true;
+    router.replace(`/pricing?billing=${billingCycle}`);
     void startCheckout(billingCycle);
-  }, [billingCycle, hasCheckoutIntent, isSubmitting, loading, startCheckout, user]);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    let active = true;
-
-    void (async () => {
-      try {
-        const response = await authorizedFetch(user, "/api/subscription/status");
-        const payload = (await response.json()) as AppSubscriptionSnapshot & {
-          error?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Unable to load subscription state.");
-        }
-
-        if (active) {
-          setSubscription(payload);
-        }
-      } catch {
-        if (active) {
-          setSubscription(null);
-        }
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [user]);
+  }, [account.error, account.loading, billingCycle, hasCheckoutIntent, isSubmitting, loading, router, startCheckout, subscription, user]);
 
   const proPricing =
     billingCycle === "yearly"
@@ -270,7 +243,7 @@ export function PricingPageClient() {
                 <>
                   <Button
                     className="w-full border-foreground bg-foreground text-[#f1f1f1] hover:border-foreground hover:bg-background hover:text-foreground"
-                    disabled={isSubmitting || loading}
+                    disabled={isSubmitting || loading || !ready || (!!user && (account.loading || !!account.error))}
                     onClick={() => void startCheckout(billingCycle)}
                     type="button"
                   >
@@ -305,7 +278,9 @@ export function PricingPageClient() {
             {!ready
               ? "Firebase client credentials are not configured yet, so checkout and sign-in are currently disabled."
               : "Your desktop app verifies access against this backend whenever it opens."}
-            {error ? <p className="mt-3 text-danger">{error}</p> : null}
+            {account.loading ? <p role="status" className="mt-3">Checking your current plan...</p> : null}
+            {account.error ? <div role="alert" className="mt-3 text-danger">{account.error}<Button className="mt-3" variant="secondary" onClick={account.retry}>Retry plan check</Button></div> : null}
+            {error ? <p role="alert" className="mt-3 text-danger">{error}</p> : null}
           </div>
         </div>
       </section>

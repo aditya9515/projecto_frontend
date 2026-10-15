@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
@@ -15,11 +16,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       sessions: sessions.map((session) => toPublicDesktopSession(session)),
-    });
-  } catch {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+    }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", undefined);
   }
 }

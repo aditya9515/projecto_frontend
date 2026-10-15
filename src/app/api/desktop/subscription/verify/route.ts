@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -24,10 +25,11 @@ export function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const env = getAppRuntimeEnv();
+  let allowedOrigin: string | null = null;
 
   try {
-    const allowedOrigin = ensureDesktopOrigin(
+    const env = getAppRuntimeEnv();
+    allowedOrigin = ensureDesktopOrigin(
       request,
       env.APP_BASE_URL,
       env.DESKTOP_ALLOWED_ORIGINS,
@@ -60,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
+        userId: session.userId,
         plan: access.subscription.plan,
         status: access.subscription.status,
         email: profile?.email ?? undefined,
@@ -79,31 +82,6 @@ export async function POST(request: NextRequest) {
       },
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "Origin not allowed") {
-      return NextResponse.json(
-        { error: "Origin not allowed" },
-        { status: 403 },
-      );
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: "Invalid desktop verification request.",
-          details: error.flatten(),
-        },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to verify desktop subscription.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", buildDesktopCorsHeaders(allowedOrigin));
   }
 }

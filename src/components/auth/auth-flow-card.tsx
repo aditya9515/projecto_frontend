@@ -6,7 +6,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchSignInMethodsForEmail,
   getRedirectResult,
@@ -52,18 +52,20 @@ async function describeAuthError(error: AuthError, userEmail?: string | null) {
   if (error.code === "auth/account-exists-with-different-credential") {
     const auth = await getFirebaseAuthClient();
     const email = error.customData?.email ?? userEmail ?? undefined;
-    const methods =
-      auth && email ? await fetchSignInMethodsForEmail(auth, email) : [];
+    const methods = auth && email
+      ? await fetchSignInMethodsForEmail(auth, email).catch(() => []) : [];
     return describeProviderConflict(methods);
   }
 
   if (error.code === "auth/unauthorized-domain") {
-    return "This domain is not authorized in Firebase Authentication yet. Add the current origin to the Firebase allowed domains list.";
+    return "Sign-in is unavailable on this address. Please use the Projecto website or contact support.";
   }
 
   if (error.code === "auth/popup-closed-by-user") {
     return "The sign-in popup was closed before the flow completed.";
   }
+  if (error.code === "auth/operation-not-allowed") return "This sign-in provider is currently unavailable. Please try another provider.";
+  if (error.code === "auth/network-request-failed") return "Sign-in could not connect. Check your connection and try again.";
 
   return error.message || "Unable to complete sign-in right now.";
 }
@@ -75,7 +77,7 @@ export function AuthFlowCard({
   mode: "login" | "desktop";
   desktopProtocol?: string;
 }) {
-  const { user, loading, ready } = useAuth();
+  const { user, loading, ready, error: initializationError } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [busyProvider, setBusyProvider] = useState<"google" | "apple" | null>(
@@ -84,6 +86,7 @@ export function AuthFlowCard({
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [handledResult, setHandledResult] = useState(false);
+  const finalizing = useRef(false);
 
   const billingCycle = useMemo<BillingCycle>(
     () => parseBillingCycle(searchParams.get("billing")),
@@ -114,44 +117,54 @@ export function AuthFlowCard({
 
   const finalizeLogin = useCallback(
     async (activeUser: User) => {
+      if (finalizing.current) return;
+      finalizing.current = true;
       setError(null);
-      await syncFirebaseUser(activeUser);
+      setStatus("Loading your account...");
+      try {
+        await syncFirebaseUser(activeUser);
 
-      if (mode === "desktop") {
-        setStatus("Creating a secure desktop sign-in callback...");
+        if (mode === "desktop") {
+          setStatus("Creating a secure desktop sign-in callback...");
 
-        const response = await authorizedFetch(
-          activeUser,
-          "/api/desktop/auth/create-code",
-          {
-            method: "POST",
-          },
-        );
-        const payload = (await response.json()) as Partial<DesktopCallbackPayload> & {
-          error?: string;
-          token?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(
-            payload.error ?? "Unable to create desktop sign-in callback.",
+          const response = await authorizedFetch(
+            activeUser,
+            "/api/desktop/auth/create-code",
+            {
+              method: "POST",
+              ...(searchParams.get("desktopState") && searchParams.get("codeChallenge") ? {
+                body: JSON.stringify({ state: searchParams.get("desktopState"), codeChallenge: searchParams.get("codeChallenge") }),
+              } : {}),
+            },
           );
+          const payload = (await response.json()) as Partial<DesktopCallbackPayload> & {
+            error?: string;
+            token?: string;
+          };
+
+          if (!response.ok) {
+            throw new Error(
+              payload.error ?? "Unable to create desktop sign-in callback.",
+            );
+          }
+
+          window.location.href = resolveDesktopRedirect(payload);
+          return;
         }
 
-        window.location.href = resolveDesktopRedirect(payload);
-        return;
+        setStatus("Redirecting you back into projecto...");
+        router.replace(
+          buildPostLoginDestination({
+            nextPath,
+            intent,
+            billingCycle,
+          }),
+        );
+      } finally {
+        finalizing.current = false;
       }
-
-      setStatus("Redirecting you back into projecto...");
-      router.replace(
-        buildPostLoginDestination({
-          nextPath,
-          intent,
-          billingCycle,
-        }),
-      );
     },
-    [billingCycle, intent, mode, nextPath, resolveDesktopRedirect, router],
+    [billingCycle, intent, mode, nextPath, resolveDesktopRedirect, router, searchParams],
   );
 
   async function startSignIn(kind: "google" | "apple") {
@@ -163,27 +176,36 @@ export function AuthFlowCard({
         : "Opening Apple sign-in...",
     );
 
-    const auth = await getFirebaseAuthClient();
-    if (!auth) {
-      setBusyProvider(null);
-      setStatus(null);
-      setError(
-        "Firebase Authentication is not configured yet. Add the public Firebase environment variables to enable sign-in.",
-      );
-      return;
-    }
-
-    const provider = createProvider(kind);
-
     try {
+      const auth = await getFirebaseAuthClient();
+      if (!auth) {
+        setBusyProvider(null);
+        setStatus(null);
+        setError(
+          "Firebase Authentication is not configured yet. Add the public Firebase environment variables to enable sign-in.",
+        );
+        return;
+      }
+
+      const provider = createProvider(kind);
+
       const result = await signInWithPopup(auth, provider);
       await finalizeLogin(result.user);
     } catch (authError) {
       const firebaseError = authError as AuthError;
 
       if (shouldFallbackToRedirect(firebaseError)) {
-        await signInWithRedirect(auth, provider);
-        return;
+        try {
+          const auth = await getFirebaseAuthClient();
+          if (!auth) throw new Error("Sign-in is unavailable. Please try again later.");
+          await signInWithRedirect(auth, createProvider(kind));
+          return;
+        } catch (redirectError) {
+          setError(await describeAuthError(redirectError as AuthError));
+          setBusyProvider(null);
+          setStatus(null);
+          return;
+        }
       }
 
       setStatus(null);
@@ -200,28 +222,29 @@ export function AuthFlowCard({
         return;
       }
 
-      const auth = await getFirebaseAuthClient();
-      if (!auth) {
-        setHandledResult(true);
-        return;
-      }
-
       try {
+        const auth = await getFirebaseAuthClient();
+        if (!auth) {
+          setHandledResult(true);
+          return;
+        }
+
         const result = await getRedirectResult(auth);
         if (!active) {
           return;
         }
 
-        setHandledResult(true);
         if (result?.user) {
           await finalizeLogin(result.user);
         }
+        if (active) setHandledResult(true);
       } catch (redirectError) {
         if (!active) {
           return;
         }
 
         setHandledResult(true);
+        setStatus(null);
         setError(await describeAuthError(redirectError as AuthError));
       }
     })();
@@ -232,7 +255,7 @@ export function AuthFlowCard({
   }, [finalizeLogin, handledResult, ready]);
 
   useEffect(() => {
-    if (!user || loading || busyProvider || status) {
+    if (!user || loading || !handledResult || busyProvider || status || error) {
       return;
     }
 
@@ -250,7 +273,7 @@ export function AuthFlowCard({
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [busyProvider, finalizeLogin, loading, status, user]);
+  }, [busyProvider, error, finalizeLogin, handledResult, loading, status, user]);
 
   return (
     <div className="section-shell py-12 sm:py-20">
@@ -297,7 +320,7 @@ export function AuthFlowCard({
             <div className="mt-8 space-y-3">
               <Button
                 className="w-full justify-between border-background bg-background text-foreground hover:border-brand hover:bg-brand hover:text-foreground"
-                disabled={!!busyProvider}
+                disabled={loading || !ready || !!busyProvider || !!status}
                 onClick={() => void startSignIn("google")}
                 type="button"
               >
@@ -307,7 +330,7 @@ export function AuthFlowCard({
 
               <Button
                 className="w-full justify-between border-[#555550] text-[#f1f1f1] hover:border-brand hover:bg-brand hover:text-foreground"
-                disabled={!!busyProvider}
+                disabled={loading || !ready || !!busyProvider || !!status}
                 onClick={() => void startSignIn("apple")}
                 type="button"
                 variant="secondary"
@@ -328,9 +351,15 @@ export function AuthFlowCard({
           </div>
 
           <div className="mt-8 min-h-7" aria-live="polite">
-            {!ready ? <p className="text-sm text-brand">Firebase Authentication is not configured yet.</p> : null}
+            {loading ? <p className="text-sm text-brand">Loading sign-in...</p> : initializationError ? <p role="alert" className="text-sm text-[#ff9a9a]">{initializationError}</p> : !ready ? <p className="text-sm text-brand">Sign-in is currently unavailable. Please try again later.</p> : null}
             {status ? <p className="inline-flex items-center gap-2 text-sm text-[#f1f1f1]"><LoaderCircle className="size-4 animate-spin" />{status}</p> : null}
             {error ? <p className="text-sm text-[#ff9a9a]">{error}</p> : null}
+            {error && user ? <Button className="mt-3" type="button" disabled={!!status} onClick={() => {
+              void finalizeLogin(user).catch((retryError) => {
+                setStatus(null);
+                setError(retryError instanceof Error ? retryError.message : "Unable to finish sign-in.");
+              });
+            }}>Retry account connection</Button> : null}
           </div>
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+import { FieldValue, Timestamp, type Transaction } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase/admin";
 import type {
   DesktopAuthTokenRecord,
@@ -18,6 +20,21 @@ const PROJECT_DIRECTORIES = "projectDirectories";
 const SUBSCRIPTION_OVERRIDES = "subscriptionOverrides";
 const PROCESSED_WEBHOOKS = "processedWebhooks";
 const SUBSCRIPTION_AUDIT_LOGS = "subscriptionAuditLogs";
+
+const directoryTransaction = new AsyncLocalStorage<Transaction>();
+
+/** The shared per-user document makes otherwise independent project writes conflict and retry. */
+export async function withProjectDirectoryTransaction<T>(userId: string, operation: () => Promise<T>): Promise<T> {
+  if (directoryTransaction.getStore()) return operation();
+  const db = getAdminDb();
+  const guard = db.collection("projectDirectoryState").doc(userId);
+  return db.runTransaction(async (transaction) => {
+    await transaction.get(guard);
+    const result = await directoryTransaction.run(transaction, operation);
+    transaction.set(guard, { revision: FieldValue.increment(1), updatedAt: new Date().toISOString() }, { merge: true });
+    return result;
+  });
+}
 
 export async function upsertUserProfile(record: UserProfileRecord) {
   const db = getAdminDb();
@@ -47,7 +64,18 @@ export async function getSubscriptionById(subscriptionId: string) {
   return snapshot.exists ? (snapshot.data() as SubscriptionRecord) : null;
 }
 
-export async function upsertSubscription(record: SubscriptionRecord) {
+export async function upsertSubscription(record: SubscriptionRecord, eventTimestamp?: string) {
+  if (eventTimestamp) {
+    const db = getAdminDb();
+    const reference = db.collection(SUBSCRIPTIONS).doc(record.dodoSubscriptionId);
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(reference);
+      const existingTimestamp = snapshot.data()?.lastWebhookAt as string | undefined;
+      if (existingTimestamp && Date.parse(existingTimestamp) > Date.parse(eventTimestamp)) return;
+      transaction.set(reference, { ...record, lastWebhookAt: eventTimestamp }, { merge: true });
+    });
+    return;
+  }
   await getAdminDb()
     .collection(SUBSCRIPTIONS)
     .doc(record.dodoSubscriptionId)
@@ -83,16 +111,21 @@ export async function markWebhookProcessed(webhookId: string, type: string) {
       createdAt: new Date().toISOString(),
     });
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    if ((error as { code?: number }).code === 6) return false;
+    throw error;
   }
+}
+
+export async function isWebhookProcessed(webhookId: string) {
+  return (await getAdminDb().collection(PROCESSED_WEBHOOKS).doc(webhookId).get()).exists;
 }
 
 export async function createDesktopAuthToken(record: DesktopAuthTokenRecord) {
   await getAdminDb()
     .collection(DESKTOP_AUTH_TOKENS)
     .doc(record.id)
-    .set(record, { merge: true });
+    .set({ ...record, deleteAfter: Timestamp.fromDate(new Date(record.expiresAt)) }, { merge: true });
 }
 
 export async function getDesktopAuthToken(id: string) {
@@ -125,7 +158,7 @@ export async function consumeDesktopAuthToken(id: string) {
     }
 
     const record = snapshot.data() as DesktopAuthTokenRecord;
-    if (record.used) {
+    if (record.used || Date.parse(record.expiresAt) <= Date.now()) {
       return null;
     }
 
@@ -146,7 +179,7 @@ export async function createDesktopSession(record: DesktopSessionRecord) {
   await getAdminDb()
     .collection(DESKTOP_SESSIONS)
     .doc(record.id)
-    .set(record, { merge: true });
+    .set({ ...record, deleteAfter: Timestamp.fromDate(new Date(record.expiresAt)) }, { merge: true });
 }
 
 export async function getDesktopSession(id: string) {
@@ -235,30 +268,48 @@ export async function appendSubscriptionAuditLog(
 }
 
 export async function listProjectDirectoriesForUser(userId: string) {
-  const snapshot = await getAdminDb()
-    .collection(PROJECT_DIRECTORIES)
-    .where("userId", "==", userId)
-    .get();
+  const query = getAdminDb().collection(PROJECT_DIRECTORIES).where("userId", "==", userId);
+  const transaction = directoryTransaction.getStore();
+  const snapshot = transaction ? await transaction.get(query) : await query.get();
 
   return snapshot.docs.map((doc) => doc.data() as ProjectDirectoryRecord);
 }
 
 export async function getProjectDirectoryById(projectId: string) {
-  const snapshot = await getAdminDb()
-    .collection(PROJECT_DIRECTORIES)
-    .doc(projectId)
-    .get();
+  const reference = getAdminDb().collection(PROJECT_DIRECTORIES).doc(projectId);
+  const transaction = directoryTransaction.getStore();
+  const snapshot = transaction ? await transaction.get(reference) : await reference.get();
 
   return snapshot.exists ? (snapshot.data() as ProjectDirectoryRecord) : null;
 }
 
 export async function upsertProjectDirectory(record: ProjectDirectoryRecord) {
-  await getAdminDb()
-    .collection(PROJECT_DIRECTORIES)
-    .doc(record.id)
-    .set(record, { merge: true });
+  const reference = getAdminDb().collection(PROJECT_DIRECTORIES).doc(record.id);
+  const transaction = directoryTransaction.getStore();
+  if (transaction) { transaction.set(reference, record, { merge: true }); return; }
+  await reference.set(record, { merge: true });
+}
+
+export async function upsertProjectDirectories(records: ProjectDirectoryRecord[]) {
+  const db = getAdminDb();
+  const transaction = directoryTransaction.getStore();
+  if (transaction) {
+    for (const record of records) transaction.set(db.collection(PROJECT_DIRECTORIES).doc(record.id), record, { merge: true });
+    return;
+  }
+  // Imports are limited to a single atomic batch. Reconciliation can span batches.
+  for (let index = 0; index < records.length; index += 500) {
+    const batch = db.batch();
+    for (const record of records.slice(index, index + 500)) {
+      batch.set(db.collection(PROJECT_DIRECTORIES).doc(record.id), record, { merge: true });
+    }
+    await batch.commit();
+  }
 }
 
 export async function deleteProjectDirectory(projectId: string) {
-  await getAdminDb().collection(PROJECT_DIRECTORIES).doc(projectId).delete();
+  const reference = getAdminDb().collection(PROJECT_DIRECTORIES).doc(projectId);
+  const transaction = directoryTransaction.getStore();
+  if (transaction) { transaction.delete(reference); return; }
+  await reference.delete();
 }

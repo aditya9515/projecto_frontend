@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { unwrapDodoWebhook } from "@/lib/dodo";
 import {
   getSubscriptionById,
+  isWebhookProcessed,
   markWebhookProcessed,
   upsertSubscription,
 } from "@/lib/firestore";
@@ -24,6 +25,7 @@ vi.mock("@/lib/env", () => ({
 
 vi.mock("@/lib/firestore", () => ({
   getSubscriptionById: vi.fn(),
+  isWebhookProcessed: vi.fn(),
   markWebhookProcessed: vi.fn(),
   upsertSubscription: vi.fn(),
 }));
@@ -61,6 +63,8 @@ function request() {
 
 describe("Dodo webhook route", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(isWebhookProcessed).mockResolvedValue(false);
     vi.mocked(getSubscriptionById).mockResolvedValue(existingSubscription);
     vi.mocked(markWebhookProcessed).mockResolvedValue(true);
     vi.mocked(upsertSubscription).mockResolvedValue(undefined);
@@ -103,6 +107,7 @@ describe("Dodo webhook route", () => {
         cancelAtPeriodEnd: true,
         currentPeriodEnd: "2027-06-01T00:00:00.000Z",
       }),
+      "2026-06-12T00:00:00.000Z",
     );
     expect(reconcileProjectDirectoryVisibilityForUser).toHaveBeenCalledWith(
       "user_1",
@@ -134,9 +139,24 @@ describe("Dodo webhook route", () => {
         status: "on_hold",
         currentPeriodEnd: "2026-05-01T00:00:00.000Z",
       }),
+      "2026-06-12T00:00:00.000Z",
     );
     expect(reconcileProjectDirectoryVisibilityForUser).toHaveBeenCalledWith(
       "user_1",
     );
+  });
+
+  it("skips an already processed delivery before applying subscription changes", async () => {
+    vi.mocked(isWebhookProcessed).mockResolvedValue(true);
+    const response = await POST(request());
+    expect(await response.json()).toEqual({ received: true, duplicate: true });
+    expect(upsertSubscription).not.toHaveBeenCalled();
+  });
+
+  it("returns a retryable server error when persistence fails", async () => {
+    vi.mocked(isWebhookProcessed).mockRejectedValueOnce(new Error("database unavailable"));
+    const response = await POST(request());
+    expect(response.status).toBe(500);
+    expect(markWebhookProcessed).not.toHaveBeenCalled();
   });
 });

@@ -25,6 +25,7 @@ export function buildDesktopCorsHeaders(origin: string | null) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     Vary: "Origin",
+    "Cache-Control": "no-store",
   });
 
   if (origin) {

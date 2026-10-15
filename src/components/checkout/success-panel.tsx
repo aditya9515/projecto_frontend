@@ -1,68 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { CheckCircle2, LoaderCircle } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { authorizedFetch } from "@/lib/client-api";
+import { useAuthorizedResource } from "@/lib/use-authorized-resource";
 import type { AppSubscriptionSnapshot } from "@/lib/types";
 import { formatDateOnly } from "@/lib/utils";
 
 export function SuccessPanel() {
   const { user, loading } = useAuth();
-  const [subscription, setSubscription] = useState<AppSubscriptionSnapshot | null>(
-    null,
-  );
-  const [error, setError] = useState<string | null>(null);
-
+  const account = useAuthorizedResource<AppSubscriptionSnapshot>(user, "/api/subscription/status", "Unable to verify your subscription. Please try again.");
+  const attempts = useRef(0);
+  const subscription = account.data;
+  const retry = account.retry;
+  const confirmed = subscription?.plan === "pro" && subscription.status === "active";
+  useEffect(() => { attempts.current = 0; }, [user]);
   useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    let cancelled = false;
-    let attempts = 0;
-
-    const poll = async () => {
-      attempts += 1;
-
-      try {
-        const response = await authorizedFetch(user, "/api/subscription/status");
-        const payload = (await response.json()) as AppSubscriptionSnapshot & {
-          error?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Unable to load subscription state.");
-        }
-
-        if (!cancelled) {
-          setSubscription(payload);
-        }
-
-        if (!cancelled && payload.status !== "active" && attempts < 6) {
-          window.setTimeout(() => void poll(), 1800);
-        }
-      } catch (subscriptionError) {
-        if (!cancelled) {
-          setError(
-            subscriptionError instanceof Error
-              ? subscriptionError.message
-              : "Unable to load subscription state.",
-          );
-        }
-      }
-    };
-
-    void poll();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
+    if (!user || !subscription || confirmed || attempts.current >= 10) return;
+    const timer = window.setTimeout(() => {
+      attempts.current += 1;
+      retry();
+    }, 1800);
+    return () => { window.clearTimeout(timer); };
+  }, [retry, confirmed, subscription, user]);
 
   return (
     <div className="section-shell py-12 sm:py-20">
@@ -72,13 +36,12 @@ export function SuccessPanel() {
             <div className="flex size-14 items-center justify-center rounded-[6px] border border-foreground bg-foreground text-brand">
               <CheckCircle2 className="size-7" />
             </div>
-            <div className="mt-8 font-mono text-[0.68rem] uppercase tracking-[0.12em]">Payment received</div>
+            <div className="mt-8 font-mono text-[0.68rem] uppercase tracking-[0.12em]">{confirmed ? "Access confirmed" : "Checking your subscription"}</div>
             <h1 className="mt-5 text-5xl font-medium leading-[0.92] tracking-[-0.06em] sm:text-6xl">
-              Projecto is updating your Pro access.
+              {confirmed ? "Your Pro access is ready." : "Confirm your Pro access."}
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8">
-              Dodo Payments securely handled checkout. This page now waits for the
-              billing webhook to sync your subscription into the Projecto backend.
+              {confirmed ? "Your account now has active Pro access. Continue in the desktop app or manage your account below." : "We are checking your account for the latest subscription update. Your Pro access appears here once checkout is confirmed."}
             </p>
           </div>
 
@@ -94,7 +57,7 @@ export function SuccessPanel() {
           ) : user ? (
             <div className="space-y-3 text-sm text-muted-strong">
               <div className="flex justify-between gap-4 border-b border-border pb-3"><span className="text-muted">Email</span><span className="truncate font-medium">{user.email}</span></div>
-              <div className="flex justify-between gap-4 border-b border-border pb-3"><span className="text-muted">Plan</span><span className="font-medium">{subscription?.plan === "pro" ? "Pro" : "Free"}</span></div>
+              <div className="flex justify-between gap-4 border-b border-border pb-3"><span className="text-muted">Plan</span><span className="font-medium">{subscription ? (subscription.plan === "pro" ? "Pro" : "Free") : "Checking..."}</span></div>
               <div className="flex justify-between gap-4 border-b border-border pb-3"><span className="text-muted">Status</span><span className="font-medium">{subscription?.status ?? "waiting"}</span></div>
               <div className="flex justify-between gap-4"><span className="text-muted">Renewal</span><span className="font-medium">{formatDateOnly(subscription?.expiresAt)}</span></div>
             </div>
@@ -104,7 +67,9 @@ export function SuccessPanel() {
               subscription state immediately.
             </div>
           )}
-          {error ? <p className="mt-4 text-sm text-danger">{error}</p> : null}
+          {account.error ? <p role="alert" className="mt-4 text-sm text-danger">{account.error}</p> : null}
+          {user && !confirmed && !account.loading ? <p className="mt-4 text-sm text-muted">Pro access is not confirmed yet. If you completed checkout, refresh the status or check your account shortly.</p> : null}
+          {user ? <Button className="mt-4" variant="secondary" disabled={account.loading} onClick={() => { attempts.current = 0; account.retry(); }}>Refresh subscription status</Button> : <Button href="/login?next=%2Fcheckout%2Fsuccess" className="mt-4">Sign in to check your subscription</Button>}
               </div>
             </div>
 

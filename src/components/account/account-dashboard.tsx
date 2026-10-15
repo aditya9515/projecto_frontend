@@ -16,13 +16,15 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { ContinueInDesktopButton } from "@/components/desktop/continue-in-desktop-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { authorizedFetch } from "@/lib/client-api";
-import type { AppSubscriptionSnapshot, DesktopSessionPublicRecord } from "@/lib/types";
+import { authorizedFetch, readApiResponse } from "@/lib/client-api";
+import type { AppSubscriptionSnapshot, DesktopSessionPublicRecord, ProjectDirectoryRecord } from "@/lib/types";
+import { useAuthorizedResource } from "@/lib/use-authorized-resource";
 import { formatDateOnly, initialsFromName } from "@/lib/utils";
 
 interface SubscriptionStatusResponse extends AppSubscriptionSnapshot {
   email?: string;
   providerIds?: string[];
+  canManageBilling?: boolean;
 }
 
 function statusLabel(status: SubscriptionStatusResponse["status"]) {
@@ -54,11 +56,13 @@ function providerLabel(providerId: string) {
 export function AccountDashboard() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
-  const [subscription, setSubscription] =
-    useState<SubscriptionStatusResponse | null>(null);
+  const account = useAuthorizedResource<SubscriptionStatusResponse>(user, "/api/subscription/status", "Unable to load your subscription.");
+  const devices = useAuthorizedResource<{ sessions: DesktopSessionPublicRecord[] }>(user, "/api/account/desktop-sessions", "Unable to load your desktop devices.");
+  const projects = useAuthorizedResource<{ projects: ProjectDirectoryRecord[]; archivedProjects: ProjectDirectoryRecord[] }>(user, "/api/projects", "Unable to load your saved projects.");
+  const subscription = account.data;
+  const sessions = devices.data?.sessions ?? [];
   const [error, setError] = useState<string | null>(null);
   const [billingBusy, setBillingBusy] = useState(false);
-  const [sessions, setSessions] = useState<DesktopSessionPublicRecord[]>([]);
   const [sessionBusyId, setSessionBusyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,81 +70,6 @@ export function AccountDashboard() {
       router.replace("/login?next=/account");
     }
   }, [loading, router, user]);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    let active = true;
-
-    void (async () => {
-      try {
-        const response = await authorizedFetch(user, "/api/subscription/status");
-        const payload = (await response.json()) as SubscriptionStatusResponse & {
-          error?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Unable to load subscription state.");
-        }
-
-        if (active) {
-          setSubscription(payload);
-        }
-      } catch (accountError) {
-        if (active) {
-          setError(
-            accountError instanceof Error
-              ? accountError.message
-              : "Unable to load account state.",
-          );
-        }
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    let active = true;
-
-    void (async () => {
-      try {
-        const response = await authorizedFetch(user, "/api/account/desktop-sessions");
-        const payload = (await response.json()) as {
-          sessions?: DesktopSessionPublicRecord[];
-          error?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(payload.error ?? "Unable to load desktop devices.");
-        }
-
-        if (active) {
-          setSessions(payload.sessions ?? []);
-        }
-      } catch (deviceError) {
-        if (active) {
-          setError(
-            deviceError instanceof Error
-              ? deviceError.message
-              : "Unable to load desktop devices.",
-          );
-        }
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [user]);
 
   async function openBillingPortal() {
     if (!user) {
@@ -154,10 +83,10 @@ export function AccountDashboard() {
       const response = await authorizedFetch(user, "/api/billing/portal", {
         method: "POST",
       });
-      const payload = (await response.json()) as { error?: string; url?: string };
+      const payload = await readApiResponse<{ url?: string }>(response, "Unable to open billing.");
 
       if (!response.ok || !payload.url) {
-        throw new Error(payload.error ?? "Billing portal is not available yet.");
+        throw new Error("Billing portal is not available yet.");
       }
 
       window.location.href = payload.url;
@@ -187,20 +116,13 @@ export function AccountDashboard() {
         },
         body: JSON.stringify({ sessionId }),
       });
-      const payload = (await response.json()) as {
-        session?: DesktopSessionPublicRecord;
-        error?: string;
-      };
+      const payload = await readApiResponse<{ session?: DesktopSessionPublicRecord }>(response, "Unable to revoke desktop session.");
 
       if (!response.ok || !payload.session) {
-        throw new Error(payload.error ?? "Unable to revoke desktop session.");
+        throw new Error("Unable to revoke desktop session.");
       }
 
-      setSessions((current) =>
-        current.map((session) =>
-          session.id === sessionId ? payload.session! : session,
-        ),
-      );
+      devices.retry();
     } catch (revokeError) {
       setError(
         revokeError instanceof Error
@@ -257,7 +179,7 @@ export function AccountDashboard() {
                 </div>
                 <div className="tone-chip">
                   <CheckCircle2 className="size-3.5" />
-                  {subscription?.status === "active" ? "Desktop verified" : "Free access"}
+                  {account.loading ? "Loading access" : !subscription ? "Access unavailable" : subscription.status === "active" ? "Desktop verified" : "Free access"}
                 </div>
               </div>
             </div>
@@ -276,13 +198,13 @@ export function AccountDashboard() {
               <div className="account-stat">
                 <div className="account-label">Current plan</div>
                 <div className="account-value">
-                  {subscription?.plan === "pro" ? "Pro" : "Free"}
+                  {account.loading ? "Loading..." : !subscription ? "Unavailable" : subscription.plan === "pro" ? "Pro" : "Free"}
                 </div>
               </div>
               <div className="account-stat">
                 <div className="account-label">Subscription status</div>
                 <div className="account-value">
-                  {statusLabel(subscription?.status ?? "none")}
+                  {account.loading ? "Loading..." : !subscription ? "Unavailable" : statusLabel(subscription.status)}
                 </div>
               </div>
               <div className="account-stat">
@@ -294,15 +216,13 @@ export function AccountDashboard() {
               <div className="account-stat">
                 <div className="account-label">Desktop access</div>
                 <div className="account-value">
-                  {subscription?.status === "active"
-                    ? "Verified for Pro desktop access"
-                    : "Verified for Free desktop access"}
+                  {account.loading ? "Loading..." : !subscription ? "Unable to verify access" : subscription.plan === "pro" && subscription.status === "active" ? "Verified for Pro desktop access" : "Verified for Free desktop access"}
                 </div>
               </div>
               <div className="account-stat">
                 <div className="account-label">Hidden projects on Free</div>
                 <div className="account-value">
-                  {subscription?.archivedProjectCount ?? 0}
+                  {subscription?.archivedProjectCount ?? "Unavailable"}
                 </div>
               </div>
             </div>
@@ -329,7 +249,7 @@ export function AccountDashboard() {
               />
               <Button
                 className="w-full"
-                disabled={billingBusy}
+                disabled={billingBusy || !subscription?.canManageBilling}
                 onClick={() => void openBillingPortal()}
                 type="button"
                 variant="secondary"
@@ -346,9 +266,10 @@ export function AccountDashboard() {
                   </>
                 )}
               </Button>
+              <Button href="/pricing" variant="secondary" className="w-full">Compare plans</Button>
               <Button
                 className="w-full"
-                onClick={() => void signOut()}
+                onClick={() => { void signOut().catch(() => setError("Unable to sign out. Please try again.")); }}
                 type="button"
                 variant="secondary"
               >
@@ -356,7 +277,23 @@ export function AccountDashboard() {
                 Log out
               </Button>
             </div>
-            {error ? <p className="mt-5 text-sm text-danger">{error}</p> : null}
+            {account.error ? <div role="alert" className="mt-5 text-sm text-danger">{account.error}<Button onClick={account.retry} variant="secondary" className="mt-3">Retry account</Button></div> : null}
+            {subscription && !subscription.canManageBilling ? <p className="mt-4 text-sm text-muted">No paid billing account is linked yet. You can choose a plan on the pricing page.</p> : null}
+            {error ? <p role="alert" className="mt-5 text-sm text-danger">{error}</p> : null}
+          </Card>
+
+          <Card>
+            <div className="account-label">Saved projects</div>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em]">Your synced project directories</h2>
+            <p className="mt-3 text-sm leading-7 text-muted">Directory names and settings sync with your account. Open and manage these folders in the Projecto desktop app.</p>
+            <div className="mt-6 space-y-3">
+              {projects.loading ? <p role="status" className="text-sm text-muted">Loading saved projects...</p> : projects.error ? <div role="alert" className="text-sm text-danger">{projects.error}<Button className="mt-3" variant="secondary" onClick={projects.retry}>Retry projects</Button></div> : [...(projects.data?.projects ?? []), ...(projects.data?.archivedProjects ?? [])].length === 0 ? <p className="text-sm text-muted">No saved projects yet. Add a project in the desktop app to see it here.</p> : [...(projects.data?.projects ?? []), ...(projects.data?.archivedProjects ?? [])].map((project) => (
+                <div key={project.id} className="rounded-[6px] border border-border bg-card-strong p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3"><span className="font-medium">{project.name}</span><span className="text-xs text-muted">{project.archivedByPlan ? "Archived on Free" : "Available"}</span></div>
+                  <p className="mt-2 break-all font-mono text-xs text-muted">{project.directoryPath}</p>
+                </div>
+              ))}
+            </div>
           </Card>
 
           <Card className="reveal-3">
@@ -369,7 +306,7 @@ export function AccountDashboard() {
               must sign in again through the secure browser callback flow.
             </p>
             <div className="mt-6 space-y-3">
-              {sessions.length > 0 ? (
+              {devices.loading ? <p role="status" className="text-sm text-muted">Loading desktop devices...</p> : devices.error ? <div role="alert" className="text-sm text-danger">{devices.error}<Button className="mt-3" variant="secondary" onClick={devices.retry}>Retry devices</Button></div> : sessions.length > 0 ? (
                 sessions.map((session) => (
                   <div
                     className="flex flex-col gap-4 rounded-[6px] border border-border bg-card-strong p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -390,7 +327,7 @@ export function AccountDashboard() {
                       </div>
                     </div>
                     <Button
-                      disabled={session.revoked || sessionBusyId === session.id}
+                      disabled={session.revoked || !!sessionBusyId}
                       onClick={() => void revokeDesktopSession(session.id)}
                       type="button"
                       variant="secondary"

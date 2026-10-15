@@ -111,8 +111,9 @@ export function buildDesktopUpdateManifest(input: {
   currentVersion?: string;
   platform?: string;
   arch?: string;
+  installer?: WindowsInstallerMetadata;
 }): DesktopUpdateManifest {
-  const latestVersion = cleanVersion(
+  const latestVersion = input.installer?.version ?? cleanVersion(
     process.env.PROJECTO_DESKTOP_LATEST_VERSION,
     DEFAULT_DESKTOP_VERSION,
   );
@@ -121,8 +122,10 @@ export function buildDesktopUpdateManifest(input: {
   const arch = input.arch?.trim() || "x64";
   const isWindows = platform === "win32" || platform === "windows";
   const isSupported = isWindows && arch === "x64";
-  const releaseBaseUrl = getReleaseBaseUrl(latestVersion);
-  const installer = getWindowsInstallerMetadata();
+  const installer = input.installer ?? getWindowsInstallerMetadata();
+  const releaseBaseUrl = input.installer
+    ? installer.href.slice(0, installer.href.lastIndexOf("/"))
+    : getReleaseBaseUrl(latestVersion);
   const minimumSupportedVersion = cleanVersion(
     process.env.PROJECTO_DESKTOP_MINIMUM_VERSION,
     DEFAULT_DESKTOP_VERSION,
@@ -146,7 +149,7 @@ export function buildDesktopUpdateManifest(input: {
     releaseDate: process.env.PROJECTO_DESKTOP_RELEASE_DATE?.trim() || undefined,
     releaseNotes:
       process.env.PROJECTO_DESKTOP_RELEASE_NOTES?.trim() ||
-      DEFAULT_RELEASE_NOTES,
+      (input.installer ? `Projecto ${latestVersion}. See the GitHub release for details.` : DEFAULT_RELEASE_NOTES),
     feedUrl:
       process.env.PROJECTO_DESKTOP_FEED_URL?.trim() || releaseBaseUrl,
     setupUrl: installer.href,

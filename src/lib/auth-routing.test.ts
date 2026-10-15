@@ -8,6 +8,14 @@ describe("auth routing helpers", () => {
     expect(parseBillingCycle(null)).toBe("monthly");
   });
 
+  it.each(["https://example.com", "//example.com", "/\\example.com", "/login", "/desktop-login", "javascript:alert(1)"])("rejects unsafe or looping return paths: %s", (nextPath) => {
+    expect(buildPostLoginDestination({ nextPath, intent: null, billingCycle: "monthly" })).toBe("/account");
+  });
+
+  it("preserves query strings and anchors for normal local destinations", () => {
+    expect(buildPostLoginDestination({ nextPath: "/account?tab=devices#sessions", intent: null, billingCycle: "monthly" })).toBe("/account?tab=devices#sessions");
+  });
+
   it("builds the checkout login href", () => {
     expect(buildCheckoutLoginHref("monthly")).toBe(
       "/login?next=%2Fpricing&intent=checkout&billing=monthly",
