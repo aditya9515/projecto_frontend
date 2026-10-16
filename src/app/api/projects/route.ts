@@ -1,8 +1,8 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
-import { createUserProjectDirectory, listUserProjectDirectories, ProjectDirectoryError } from "@/lib/project-directories";
+import { createUserProjectDirectory, listUserProjectDirectories } from "@/lib/project-directories";
 import { projectDirectoryCreateSchema } from "@/lib/project-directory-schemas";
 
 export const runtime = "nodejs";
@@ -12,21 +12,9 @@ export async function GET(request: NextRequest) {
     const decoded = await requireVerifiedUser(request);
     const result = await listUserProjectDirectories(decoded.uid);
 
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to load project directories.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", undefined);
   }
 }
 
@@ -38,32 +26,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid project directory payload.", details: error.flatten() },
-        { status: 400 },
-      );
-    }
-
-    if (error instanceof ProjectDirectoryError) {
-      return NextResponse.json(
-        { error: error.message, code: error.code },
-        { status: error.status },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to create project directory.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", undefined);
   }
 }

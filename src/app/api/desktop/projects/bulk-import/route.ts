@@ -1,16 +1,17 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } from "@/lib/cors";
 import { getAppRuntimeEnv } from "@/lib/env";
-import { requireDesktopSession, DesktopSessionError } from "@/lib/desktop-session";
-import { bulkImportUserProjectDirectories, ProjectDirectoryError } from "@/lib/project-directories";
+import { requireDesktopSession } from "@/lib/desktop-session";
+import { bulkImportUserProjectDirectories } from "@/lib/project-directories";
 import { desktopProjectSessionSchema, projectDirectoryCreateSchema } from "@/lib/project-directory-schemas";
 
 export const runtime = "nodejs";
 
 const bodySchema = desktopProjectSessionSchema.extend({
-  projects: z.array(projectDirectoryCreateSchema).min(1),
+  projects: z.array(projectDirectoryCreateSchema).min(1).max(500),
 });
 
 export function OPTIONS(request: NextRequest) {
@@ -23,10 +24,10 @@ export function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const env = getAppRuntimeEnv();
   let allowedOrigin: string | null = null;
 
   try {
+    const env = getAppRuntimeEnv();
     allowedOrigin = ensureDesktopOrigin(
       request,
       env.APP_BASE_URL,
@@ -40,38 +41,6 @@ export async function POST(request: NextRequest) {
       headers: buildDesktopCorsHeaders(allowedOrigin),
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Origin not allowed") {
-      return NextResponse.json(
-        { error: "Origin not allowed" },
-        { status: 403 },
-      );
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid desktop bulk import request.", details: error.flatten() },
-        { status: 400 },
-      );
-    }
-
-    if (error instanceof DesktopSessionError || error instanceof ProjectDirectoryError) {
-      return NextResponse.json(
-        { error: error.message, code: error.code },
-        {
-          status: error.status,
-          headers: buildDesktopCorsHeaders(allowedOrigin),
-        },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to bulk import desktop projects.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", buildDesktopCorsHeaders(allowedOrigin));
   }
 }

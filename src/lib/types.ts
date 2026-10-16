@@ -99,6 +99,7 @@ export interface DesktopAuthTokenRecord {
   userId: string;
   tokenHash: string;
   stateHash?: string | null;
+  codeChallenge?: string | null;
   expiresAt: string;
   used: boolean;
   createdAt: string;
@@ -145,7 +146,7 @@ export interface CheckoutIntent {
 }
 
 export interface AuthSyncPayload {
-  email: string;
+  email?: string;
   displayName: string;
   photoURL: string | null;
   providers: string[];

@@ -13,12 +13,14 @@ import type {
 } from "@/lib/types";
 
 vi.mock("@/lib/firestore", () => ({
+  withProjectDirectoryTransaction: (_userId: string, operation: () => Promise<unknown>) => operation(),
   deleteProjectDirectory: vi.fn(),
   getProjectDirectoryById: vi.fn(),
   getSubscriptionOverride: vi.fn(),
   listProjectDirectoriesForUser: vi.fn(),
   listSubscriptionsForUser: vi.fn(),
   upsertProjectDirectory: vi.fn(),
+  upsertProjectDirectories: vi.fn(),
 }));
 
 const makeProject = (overrides: Partial<ProjectDirectoryRecord>): ProjectDirectoryRecord => ({
@@ -83,6 +85,7 @@ describe("project directory rules", () => {
     vi.mocked(firestore.getSubscriptionOverride).mockResolvedValue(null);
     vi.mocked(firestore.getProjectDirectoryById).mockResolvedValue(null);
     vi.mocked(firestore.upsertProjectDirectory).mockResolvedValue(undefined);
+    vi.mocked(firestore.upsertProjectDirectories).mockResolvedValue(undefined);
   });
 
   it("prevents free users from creating more than five project directories", async () => {
@@ -175,7 +178,7 @@ describe("project directory rules", () => {
       "project_2",
       "project_1",
     ]);
-    expect(firestore.upsertProjectDirectory).toHaveBeenCalledTimes(2);
+    expect(firestore.upsertProjectDirectories).not.toHaveBeenCalled();
   });
 
   it("falls back to updatedAt when lastLaunchedAt is missing during archiving", async () => {
@@ -224,6 +227,17 @@ describe("project directory rules", () => {
     expect(result.projects).toHaveLength(1);
     expect(result.archivedProjects).toHaveLength(0);
     expect(result.projects[0]?.archivedByPlan).toBe(false);
-    expect(firestore.upsertProjectDirectory).toHaveBeenCalledTimes(1);
+    expect(firestore.upsertProjectDirectories).not.toHaveBeenCalled();
+  });
+
+  it("keeps the same visible projects on repeated reads after a downgrade", async () => {
+    const original = Array.from({ length: 7 }, (_, index) => makeProject({
+      id: `project_${index}`, directoryPath: `C:/workspace-${index}`,
+      updatedAt: `2026-04-0${index + 1}T00:00:00.000Z`,
+    }));
+    const first = await reconcileProjectDirectoryVisibility(original, 5);
+    const second = await reconcileProjectDirectoryVisibility(first.allProjects, 5);
+    expect(second.projects.map((project) => project.id)).toEqual(first.projects.map((project) => project.id));
+    expect(first.archivedProjects.every((project) => project.updatedAt === original.find((item) => item.id === project.id)?.updatedAt)).toBe(true);
   });
 });

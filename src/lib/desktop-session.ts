@@ -33,6 +33,6 @@ export async function requireDesktopSession(input: {
     );
   }
 
-  await touchDesktopSession(sessionHash);
+  if (Date.now() - Date.parse(session.lastSeenAt) > 5 * 60_000) await touchDesktopSession(sessionHash);
   return session;
 }

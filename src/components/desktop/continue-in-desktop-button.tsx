@@ -5,8 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { User } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
-import { authorizedFetch } from "@/lib/client-api";
-import type { AppSubscriptionSnapshot, DesktopCallbackPayload } from "@/lib/types";
+import type { AppSubscriptionSnapshot } from "@/lib/types";
 
 function hasDesktopCallbackAccess(subscription: AppSubscriptionSnapshot | null) {
   return subscription?.plan === "pro" && subscription.status === "active";
@@ -47,21 +46,9 @@ export function ContinueInDesktopButton({
     setStarted(false);
 
     try {
-      const response = await authorizedFetch(user, "/api/desktop/auth/create-code", {
-        method: "POST",
-      });
-      const payload = (await response.json()) as Partial<DesktopCallbackPayload> & {
-        error?: string;
-      };
-
-      if (!response.ok || !payload.redirectUrl || !payload.code || !payload.state) {
-        throw new Error(
-          payload.error ?? "Unable to create a desktop callback right now.",
-        );
-      }
-
       setStarted(true);
-      window.location.href = payload.redirectUrl;
+      // The desktop starts the challenge-bound login before this browser issues a code.
+      window.location.href = "projecto://auth/start";
     } catch (desktopError) {
       setStarted(false);
       setError(

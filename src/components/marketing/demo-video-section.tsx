@@ -3,8 +3,10 @@ import { ArrowUpRight, Play } from "lucide-react";
 import { RollingText } from "@/components/motion/rolling-text";
 import { Button } from "@/components/ui/button";
 import { PROJECTO_DEMO_VIDEO } from "@/lib/demo-video";
+import { getOptionalAppConfig } from "@/lib/env";
 
 export function DemoVideoSection() {
+  const { downloadUrl } = getOptionalAppConfig();
   return (
     <section className="border-b border-border-strong bg-card-strong py-16 sm:py-24" id="demo">
       <div className="section-shell grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
@@ -21,7 +23,7 @@ export function DemoVideoSection() {
             parse the app URL, track the port, and stop the session from Projecto.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button href="/download">
+            <Button href={downloadUrl}>
               <RollingText>Download app</RollingText>
             </Button>
             <Button href={PROJECTO_DEMO_VIDEO.href} target="_blank" variant="secondary">

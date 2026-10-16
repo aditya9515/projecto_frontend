@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -15,16 +16,12 @@ const bodySchema = z.object({
   providers: z.array(z.string()).default([]),
 });
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
-
 export async function POST(request: NextRequest) {
   try {
     const decoded = await requireVerifiedUser(request);
     const parsed = bodySchema.parse(await request.json());
     const existing = await getUserProfile(decoded.uid);
-    const email = decoded.email ?? parsed.email;
+    const email = decoded.email ?? existing?.email;
 
     if (!email) {
       return NextResponse.json(
@@ -38,7 +35,7 @@ export async function POST(request: NextRequest) {
       new Set(
         [
           ...(existing?.providers ?? []),
-          ...parsed.providers,
+          ...Object.keys(decoded.firebase.identities ?? {}),
           decoded.firebase.sign_in_provider,
         ].filter(Boolean),
       ),
@@ -52,11 +49,7 @@ export async function POST(request: NextRequest) {
         existing?.displayName ??
         decoded.name ??
         email.split("@")[0],
-      photoURL:
-        parsed.photoURL ??
-        existing?.photoURL ??
-        decoded.picture ??
-        null,
+      photoURL: parsed.photoURL !== undefined ? parsed.photoURL : existing?.photoURL ?? decoded.picture ?? null,
       providers,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
@@ -66,25 +59,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user: record });
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return unauthorized();
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request payload.", details: error.flatten() },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to sync account profile.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", undefined);
   }
 }

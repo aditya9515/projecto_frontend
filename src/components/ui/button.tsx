@@ -47,7 +47,7 @@ export function Button(props: ButtonProps | LinkButtonProps) {
     );
     const isExternal = /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(href);
     const shouldUseAnchor =
-      isExternal || linkProps.download != null || href.startsWith("/downloads/");
+      isExternal || linkProps.download != null || href.startsWith("/downloads/") || href.startsWith("/api/");
 
     if (shouldUseAnchor) {
       return (

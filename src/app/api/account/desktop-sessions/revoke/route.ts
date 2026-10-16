@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -42,16 +43,6 @@ export async function POST(request: NextRequest) {
       session: toPublicDesktopSession(session),
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid revoke request.", details: error.flatten() },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", undefined);
   }
 }

@@ -1,8 +1,11 @@
+import path from "node:path";
 import {
+  withProjectDirectoryTransaction,
   deleteProjectDirectory,
   getProjectDirectoryById,
   listProjectDirectoriesForUser,
   upsertProjectDirectory,
+  upsertProjectDirectories,
 } from "@/lib/firestore";
 import { createOpaqueToken, nowIso } from "@/lib/security";
 import { getEffectiveSubscriptionAccess } from "@/lib/subscription-access";
@@ -43,6 +46,14 @@ function normalizeDirectoryPath(directoryPath?: string) {
   return normalized;
 }
 
+export function canonicalDirectoryPath(value: string): string {
+  const trimmed = value.trim();
+  if (/^[a-z]:[\\/]|^\\\\|^\/\//i.test(trimmed)) {
+    return path.win32.normalize(trimmed).replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  }
+  return path.posix.normalize(trimmed).replace(/\/+$/, "") || "/";
+}
+
 function deriveProjectName(directoryPath: string, name?: string) {
   const trimmedName = name?.trim();
   if (trimmedName) {
@@ -61,7 +72,7 @@ function ensureUniqueDirectoryPath(
 ) {
   const duplicate = projects.find(
     (project) =>
-      project.directoryPath === directoryPath && project.id !== excludeId,
+      canonicalDirectoryPath(project.directoryPath) === canonicalDirectoryPath(directoryPath) && project.id !== excludeId,
   );
 
   if (duplicate) {
@@ -162,7 +173,7 @@ export async function listUserProjectDirectories(userId: string) {
   };
 }
 
-export async function createUserProjectDirectory(
+async function createUserProjectDirectoryInternal(
   userId: string,
   input: ProjectDirectoryMutationInput,
 ) {
@@ -202,7 +213,7 @@ export async function createUserProjectDirectory(
   };
 }
 
-export async function bulkImportUserProjectDirectories(
+async function bulkImportUserProjectDirectoriesInternal(
   userId: string,
   inputs: ProjectDirectoryMutationInput[],
 ) {
@@ -220,13 +231,13 @@ export async function bulkImportUserProjectDirectories(
   ensureBulkImportAccess(entitlements);
   ensureProjectQuota(allProjects.length, inputs.length, entitlements);
 
-  const existingPaths = new Set(allProjects.map((project) => project.directoryPath));
+  const existingPaths = new Set(allProjects.map((project) => canonicalDirectoryPath(project.directoryPath)));
   const incomingPaths = new Set<string>();
   const createdAt = nowIso();
   const importedProjects = inputs.map((input) => {
     const directoryPath = normalizeDirectoryPath(input.directoryPath);
 
-    if (existingPaths.has(directoryPath) || incomingPaths.has(directoryPath)) {
+    if (existingPaths.has(canonicalDirectoryPath(directoryPath)) || incomingPaths.has(canonicalDirectoryPath(directoryPath))) {
       throw new ProjectDirectoryError(
         "Bulk import contains duplicate project directory paths.",
         409,
@@ -235,7 +246,7 @@ export async function bulkImportUserProjectDirectories(
     }
 
     ensureThemeAccess(input, entitlements);
-    incomingPaths.add(directoryPath);
+    incomingPaths.add(canonicalDirectoryPath(directoryPath));
 
     return {
       id: createOpaqueToken(12),
@@ -255,7 +266,7 @@ export async function bulkImportUserProjectDirectories(
     } satisfies ProjectDirectoryRecord;
   });
 
-  await Promise.all(importedProjects.map((project) => upsertProjectDirectory(project)));
+  await upsertProjectDirectories(importedProjects);
 
   return {
     projects: importedProjects,
@@ -265,17 +276,17 @@ export async function bulkImportUserProjectDirectories(
   };
 }
 
-export async function updateUserProjectDirectory(
+async function updateUserProjectDirectoryInternal(
   userId: string,
   projectId: string,
   input: ProjectDirectoryMutationInput,
 ) {
-  const [existing, access] = await Promise.all([
+  const [storedProject, access] = await Promise.all([
     getProjectDirectoryById(projectId),
     getProjectDirectoryAccess(userId),
   ]);
 
-  if (!existing || existing.userId !== userId) {
+  if (!storedProject || storedProject.userId !== userId) {
     throw new ProjectDirectoryError(
       "Project directory was not found.",
       404,
@@ -284,6 +295,8 @@ export async function updateUserProjectDirectory(
   }
 
   const { allProjects, subscription, entitlements, archivedProjectCount } = access;
+  // Visibility reconciliation can update the archive flags after the parallel read.
+  const existing = allProjects.find((project) => project.id === projectId) ?? storedProject;
   const nextDirectoryPath =
     input.directoryPath === undefined
       ? existing.directoryPath
@@ -344,7 +357,7 @@ export async function updateUserProjectDirectory(
   };
 }
 
-export async function deleteUserProjectDirectory(
+async function deleteUserProjectDirectoryInternal(
   userId: string,
   projectId: string,
 ) {
@@ -409,7 +422,6 @@ function applyArchiveState(
       archivedByPlan: true,
       archivedAt: project.archivedAt ?? timestamp,
       archivedReason: reason,
-      updatedAt: timestamp,
     } satisfies ProjectDirectoryRecord;
   }
 
@@ -422,7 +434,6 @@ function applyArchiveState(
     archivedByPlan: false,
     archivedAt: null,
     archivedReason: null,
-    updatedAt: timestamp,
   } satisfies ProjectDirectoryRecord;
 }
 
@@ -460,11 +471,7 @@ export async function reconcileProjectDirectoryVisibility(
     ),
   );
 
-  const changed = reconciled.filter((project, index) => project !== sortedProjects[index]);
-
-  if (changed.length > 0) {
-    await Promise.all(changed.map((project) => upsertProjectDirectory(project)));
-  }
+  // Visibility is a derived projection. A read must never write an old full-record snapshot.
 
   const visibleProjects = reconciled
     .filter((project) => !project.archivedByPlan)
@@ -479,4 +486,20 @@ export async function reconcileProjectDirectoryVisibility(
     allProjects: reconciled,
     archivedProjectCount: archivedProjects.length,
   };
+}
+
+export async function createUserProjectDirectory(userId: string, input: ProjectDirectoryMutationInput) {
+  return withProjectDirectoryTransaction(userId, () => createUserProjectDirectoryInternal(userId, input));
+}
+
+export async function bulkImportUserProjectDirectories(userId: string, inputs: ProjectDirectoryMutationInput[]) {
+  return withProjectDirectoryTransaction(userId, () => bulkImportUserProjectDirectoriesInternal(userId, inputs));
+}
+
+export async function updateUserProjectDirectory(userId: string, projectId: string, input: ProjectDirectoryMutationInput) {
+  return withProjectDirectoryTransaction(userId, () => updateUserProjectDirectoryInternal(userId, projectId, input));
+}
+
+export async function deleteUserProjectDirectory(userId: string, projectId: string) {
+  return withProjectDirectoryTransaction(userId, () => deleteUserProjectDirectoryInternal(userId, projectId));
 }

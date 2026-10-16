@@ -106,8 +106,6 @@ export function SiteHeader() {
           <Button
             className="hidden xl:inline-flex"
             href={downloadUrl}
-            rel="noreferrer"
-            target="_blank"
           >
             <Download className="size-4" />
             <RollingText>Download</RollingText>
@@ -165,7 +163,7 @@ export function SiteHeader() {
                 <span className="text-muted">0{index + 1}</span>
               </Link>
             ))}
-            <Button className="mt-2 w-full" href={downloadUrl} target="_blank">
+            <Button className="mt-2 w-full" href={downloadUrl}>
               <Download className="size-4" />
               Download Projecto
             </Button>

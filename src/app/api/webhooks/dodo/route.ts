@@ -6,21 +6,26 @@ import {
   buildSubscriptionRecord,
 } from "@/lib/dodo-subscription";
 import { getDodoEnv } from "@/lib/env";
-import { getSubscriptionById, markWebhookProcessed, upsertSubscription } from "@/lib/firestore";
+import { getSubscriptionById, isWebhookProcessed, markWebhookProcessed, upsertSubscription } from "@/lib/firestore";
 import { reconcileProjectDirectoryVisibilityForUser } from "@/lib/project-directories";
 import { unwrapDodoWebhook } from "@/lib/dodo";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
+  let verified = false;
   try {
     const rawBody = await request.text();
     const headers = Object.fromEntries(request.headers.entries());
     const event = unwrapDodoWebhook(rawBody, headers);
+    verified = true;
     const env = getDodoEnv();
     const webhookId =
       request.headers.get("webhook-id") ??
       `${event.type}:${event.timestamp}`;
+    if (await isWebhookProcessed(webhookId)) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
 
     switch (event.type) {
       case "subscription.active":
@@ -39,7 +44,7 @@ export async function POST(request: NextRequest) {
           existing,
         });
 
-        await upsertSubscription(record);
+        await upsertSubscription(record, event.timestamp);
         await reconcileProjectDirectoryVisibilityForUser(record.userId);
         break;
       }
@@ -50,7 +55,7 @@ export async function POST(request: NextRequest) {
         const record = applyDunningEventToSubscription(existing, event.data);
 
         if (record) {
-          await upsertSubscription(record);
+          await upsertSubscription(record, event.timestamp);
           await reconcileProjectDirectoryVisibilityForUser(record.userId);
         }
         break;
@@ -66,7 +71,7 @@ export async function POST(request: NextRequest) {
         const record = applyPaymentEventToSubscription(existing, event.data);
 
         if (record) {
-          await upsertSubscription(record);
+          await upsertSubscription(record, event.timestamp);
           await reconcileProjectDirectoryVisibilityForUser(record.userId);
         }
         break;
@@ -78,15 +83,12 @@ export async function POST(request: NextRequest) {
 
     const processed = await markWebhookProcessed(webhookId, event.type);
     return NextResponse.json({ received: true, duplicate: !processed });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to process webhook.",
+        error: verified ? "Unable to process webhook. Please retry." : "Invalid webhook request.",
       },
-      { status: 400 },
+      { status: verified ? 500 : 400 },
     );
   }
 }

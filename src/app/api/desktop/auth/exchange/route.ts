@@ -1,9 +1,10 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { buildDesktopCorsHeaders, desktopOptionsResponse, ensureDesktopOrigin } from "@/lib/cors";
 import { getAppRuntimeEnv } from "@/lib/env";
-import { DesktopAuthError, exchangeDesktopCallbackCode } from "@/lib/desktop-auth";
+import { exchangeDesktopCallbackCode } from "@/lib/desktop-auth";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,7 @@ const bodySchema = z.union([
   desktopBaseSchema.extend({
     code: z.string().min(1),
     state: z.string().min(1),
+    codeVerifier: z.string().regex(/^[A-Za-z0-9_-]{43,128}$/).optional(),
   }),
 ]);
 
@@ -33,10 +35,10 @@ export function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const env = getAppRuntimeEnv();
   let allowedOrigin: string | null = null;
 
   try {
+    const env = getAppRuntimeEnv();
     allowedOrigin = ensureDesktopOrigin(
       request,
       env.APP_BASE_URL,
@@ -46,6 +48,7 @@ export async function POST(request: NextRequest) {
     const result = await exchangeDesktopCallbackCode({
       code: "code" in body ? body.code : body.token,
       state: "state" in body ? body.state : undefined,
+      codeVerifier: "codeVerifier" in body ? body.codeVerifier : undefined,
       deviceId: body.deviceId,
       deviceName: body.deviceName,
       platform: body.platform,
@@ -58,41 +61,6 @@ export async function POST(request: NextRequest) {
       },
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "Origin not allowed") {
-      return NextResponse.json(
-        { error: "Origin not allowed" },
-        { status: 403 },
-      );
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid desktop auth exchange request.", details: error.flatten() },
-        { status: 400 },
-      );
-    }
-
-    if (error instanceof DesktopAuthError) {
-      return NextResponse.json(
-        {
-          error: error.message,
-          code: error.code,
-        },
-        {
-          status: error.status,
-          headers: buildDesktopCorsHeaders(allowedOrigin),
-        },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to exchange desktop auth token.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", buildDesktopCorsHeaders(allowedOrigin));
   }
 }

@@ -19,16 +19,26 @@ export function buildPostLoginDestination(input: {
   intent: string | null;
   billingCycle: BillingCycle;
 }) {
-  const nextPath = input.nextPath ?? "/account";
-
-  if (input.intent === "checkout") {
-    const params = new URLSearchParams({
-      billing: input.billingCycle,
-      checkout: "1",
-    });
-
-    return `${nextPath}?${params.toString()}`;
+  const candidate = input.nextPath ?? "/account";
+  // Accept only local paths; URL parsing also normalizes backslashes and controls.
+  const origin = "https://projecto.local";
+  let destination = new URL("/account", origin);
+  if (candidate.startsWith("/") && !/[\\\u0000-\u0020]/.test(candidate)) {
+    try {
+      const parsed = new URL(candidate, origin);
+      if (parsed.origin === origin && !["/login", "/desktop-login"].includes(parsed.pathname)) {
+        destination = parsed;
+      }
+    } catch {
+      // Keep the account destination for malformed return paths.
+    }
   }
 
-  return nextPath;
+  if (input.intent === "checkout") {
+    destination = new URL("/pricing", origin);
+    destination.searchParams.set("billing", input.billingCycle);
+    destination.searchParams.set("checkout", "1");
+  }
+
+  return `${destination.pathname}${destination.search}${destination.hash}`;
 }

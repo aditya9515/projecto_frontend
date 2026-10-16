@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -5,6 +6,7 @@ import { requireVerifiedUser } from "@/lib/auth-server";
 import { createDodoCheckoutSession } from "@/lib/dodo";
 import { getAppRuntimeEnv } from "@/lib/env";
 import { getUserProfile } from "@/lib/firestore";
+import { getEffectiveSubscriptionAccess } from "@/lib/subscription-access";
 import { absoluteUrl } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -17,6 +19,10 @@ export async function POST(request: NextRequest) {
   try {
     const decoded = await requireVerifiedUser(request);
     const { billingCycle } = bodySchema.parse(await request.json());
+    const subscription = await getEffectiveSubscriptionAccess(decoded.uid);
+    if (subscription.plan === "pro" && subscription.status === "active") {
+      return NextResponse.json({ error: "Your Pro access is already active. Manage your subscription from your account." }, { status: 409 });
+    }
     const env = getAppRuntimeEnv();
     const profile = await getUserProfile(decoded.uid);
     const email = profile?.email ?? decoded.email;
@@ -49,25 +55,6 @@ export async function POST(request: NextRequest) {
       sessionId: checkout.session_id,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid checkout request.", details: error.flatten() },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to create checkout session.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to complete this request. Please try again.", undefined);
   }
 }

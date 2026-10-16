@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 import {
@@ -206,6 +207,17 @@ describe("desktop auth helpers", () => {
         revoked: false,
       }),
     );
+  });
+
+  it("requires the original verifier for a bound callback code", async () => {
+    const verifier = "v".repeat(43);
+    const record = authTokenRecord({ codeChallenge: createHash("sha256").update(verifier).digest("base64url") });
+    vi.mocked(getDesktopAuthToken).mockResolvedValue(record);
+    vi.mocked(consumeDesktopAuthToken).mockResolvedValue(record);
+    const input = { code: "desktop-code", state: "desktop-state", deviceId: "device-1", platform: "windows" as const };
+    await expect(exchangeDesktopCallbackCode({ ...input, codeVerifier: "wrong".repeat(10) })).rejects.toBeInstanceOf(DesktopAuthError);
+    expect(consumeDesktopAuthToken).not.toHaveBeenCalled();
+    await expect(exchangeDesktopCallbackCode({ ...input, codeVerifier: verifier })).resolves.toMatchObject({ user: { uid: decodedToken.uid } });
   });
 
   it("rejects invalid desktop callback codes", async () => {

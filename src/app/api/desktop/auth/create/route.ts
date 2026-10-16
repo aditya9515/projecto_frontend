@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
@@ -12,18 +13,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ token, expiresAt });
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to create desktop auth token.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to create desktop sign-in. Please try again.");
   }
 }

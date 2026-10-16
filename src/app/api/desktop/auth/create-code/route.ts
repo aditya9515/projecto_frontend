@@ -1,39 +1,24 @@
+import { z } from "zod";
+import { apiErrorResponse } from "@/lib/api-errors";
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireVerifiedUser } from "@/lib/auth-server";
-import { DesktopAuthError, issueDesktopCallbackPayload } from "@/lib/desktop-auth";
+import { issueDesktopCallbackPayload } from "@/lib/desktop-auth";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
     const decoded = await requireVerifiedUser(request);
-    const payload = await issueDesktopCallbackPayload(decoded);
+    const text = await request.text();
+    const binding = text ? z.object({
+      state: z.string().regex(/^[A-Za-z0-9_-]{32}$/),
+      codeChallenge: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+    }).parse(JSON.parse(text)) : undefined;
+    const payload = await issueDesktopCallbackPayload(decoded, binding);
 
     return NextResponse.json(payload);
   } catch (error) {
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (error instanceof DesktopAuthError) {
-      return NextResponse.json(
-        {
-          error: error.message,
-          code: error.code,
-        },
-        { status: error.status },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to create desktop callback code.",
-      },
-      { status: 500 },
-    );
+    return apiErrorResponse(error, "Unable to create desktop sign-in. Please try again.");
   }
 }

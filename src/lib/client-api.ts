@@ -7,13 +7,27 @@ export async function authorizedFetch(
   input: string,
   init?: RequestInit,
 ) {
-  const token = await user.getIdToken();
+  const send = async (refresh: boolean) => {
+    const token = await user.getIdToken(refresh);
+    const headers = new Headers(init?.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetch(input, { ...init, cache: "no-store", headers });
+  };
+  const response = await send(false);
+  return response.status === 401 ? send(true) : response;
+}
 
-  return fetch(input, {
-    ...init,
-    headers: {
-      ...(init?.headers ?? {}),
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function readApiResponse<T>(response: Response, fallback: string): Promise<T> {
+  let payload: T & { error?: string };
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(fallback);
+  }
+  if (!response.ok) {
+    throw new Error(response.status === 401
+      ? "Your session has expired. Sign out and sign in again."
+      : payload?.error || fallback);
+  }
+  return payload;
 }

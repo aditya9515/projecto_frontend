@@ -148,7 +148,7 @@ export function LandingPage() {
                   execution, and stack detection in one focused desktop workspace.
                 </p>
                 <div className="flex flex-col gap-3 sm:items-end" data-hero-support>
-                  <Button href={downloadUrl} rel="noreferrer" target="_blank">
+                  <Button href={downloadUrl}>
                     <RollingText>Download app</RollingText>
                     <ArrowRight className="size-4" />
                   </Button>

@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 import { getAppRuntimeEnv } from "@/lib/env";
@@ -42,6 +43,7 @@ export class DesktopAuthError extends Error {
 type DesktopExchangeInput = {
   code: string;
   state?: string;
+  codeVerifier?: string;
   deviceId: string;
   deviceName?: string;
   platform: DesktopPlatform;
@@ -107,11 +109,12 @@ export async function issueDesktopAuthToken(decoded: DecodedIdToken) {
 
 export async function issueDesktopCallbackPayload(
   decoded: DecodedIdToken,
+  binding?: { state: string; codeChallenge: string },
 ): Promise<DesktopCallbackPayload> {
   await ensureDesktopAuthUserProfile(decoded);
 
   const code = createOpaqueToken();
-  const state = createOpaqueToken(16);
+  const state = binding?.state ?? createOpaqueToken(16);
   const codeHash = sha256(code);
   const stateHash = sha256(state);
   const expiresAt = addMinutes(5);
@@ -122,6 +125,7 @@ export async function issueDesktopCallbackPayload(
     userId: decoded.uid,
     tokenHash: codeHash,
     stateHash,
+    codeChallenge: binding?.codeChallenge ?? null,
     expiresAt,
     used: false,
     createdAt: nowIso(),
@@ -161,6 +165,13 @@ export async function exchangeDesktopCallbackCode(
         401,
         "desktop_auth_state_mismatch",
       );
+    }
+  }
+
+  if (tokenRecord.codeChallenge) {
+    const challenge = input.codeVerifier ? createHash("sha256").update(input.codeVerifier).digest("base64url") : "";
+    if (Buffer.byteLength(challenge) !== Buffer.byteLength(tokenRecord.codeChallenge) || !timingSafeEqual(Buffer.from(challenge), Buffer.from(tokenRecord.codeChallenge))) {
+      throw new DesktopAuthError("Desktop login proof does not match.", 401, "desktop_auth_proof_mismatch");
     }
   }
 

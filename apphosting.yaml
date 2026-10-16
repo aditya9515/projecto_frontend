@@ -24,7 +24,7 @@ env:
       - RUNTIME
 
   - variable: NEXT_PUBLIC_APP_DOWNLOAD_URL
-    value: https://projecto.adityakosuru.online/download
+    value: https://projecto.adityakosuru.online/api/download
     availability:
       - BUILD
       - RUNTIME
